@@ -1,0 +1,16 @@
+[
+  {
+    "id": "mqwcid15uxzp",
+    "nome": "Posto Maracajá",
+    "bandeira": "Branca",
+    "endereco": "PE 90, saída de Surubim sentido Umari",
+    "createdAt": "2026-06-27T12:38:00.569Z"
+  },
+  {
+    "id": "mqwcnaggut61",
+    "nome": "Surubim Petróleo",
+    "bandeira": "Branca",
+    "endereco": "Rua Dr. Jeronimo Miranda de Melo, em frente ao ETE",
+    "createdAt": "2026-06-27T12:41:50.512Z"
+  }
+]

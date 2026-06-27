@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CentralNet — Gestão de Frota</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0c0f16; --bg2: #131720; --bg3: #1a2030; --bg4: #212840;
+  --border: #1e2d45; --border2: #2a3d5e; --text: #e8edf5; --text2: #8da4c0; --text3: #4a6080;
+  --accent: #2E86C1; --accent2: #1a6fa8; --orange: #F26522; --orange2: #d4541a;
+  --green: #22c87a; --green-bg: #0d2e1e; --yellow: #f0b429; --yellow-bg: #2e220a;
+  --red: #f05252; --red-bg: #2e0e0e;
+  --radius: 10px; --radius-sm: 6px; --shadow: 0 2px 16px rgba(0,0,0,0.5);
+  --sidebar-w: 230px; --header-h: 58px;
+}
+html { scroll-behavior: smooth; }
+body { font-family: 'Inter','Segoe UI',system-ui,sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; min-height: 100vh; overflow-x: hidden; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: var(--sidebar-w); background: var(--bg2); border-right: 1px solid var(--border); border-top: 3px solid var(--orange); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transition: transform 0.25s; }
+.main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+.header { height: var(--header-h); background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; position: sticky; top: 0; z-index: 50; }
+.content { padding: 24px; flex: 1; }
+.logo { display: flex; align-items: center; gap: 10px; padding: 18px 20px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
+.logo-sub { font-size: 11px; color: var(--text3); }
+.nav { padding: 12px 10px; flex: 1; overflow-y: auto; }
+.nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); padding: 6px 10px 4px; margin-top: 8px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13.5px; transition: all 0.15s; margin-bottom: 2px; position: relative; user-select: none; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: rgba(46,134,193,0.15); color: var(--accent); font-weight: 600; border-left: 3px solid var(--accent); }
+.nav-item .icon { width: 18px; text-align: center; font-size: 14px; }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; border-radius: 20px; font-size: 10px; font-weight: 700; padding: 1px 6px; min-width: 18px; text-align: center; }
+.sidebar-footer { padding: 12px 10px; border-top: 1px solid var(--border); }
+.page-title { font-size: 16px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.header-actions { display: flex; align-items: center; gap: 10px; }
+.hamburger { display: none; background: none; border: none; cursor: pointer; color: var(--text2); font-size: 18px; padding: 4px; }
+.alert-bell { position: relative; cursor: pointer; background: none; border: none; color: var(--text2); font-size: 16px; padding: 6px 8px; border-radius: var(--radius-sm); transition: color 0.15s; }
+.alert-bell:hover { color: var(--text); background: var(--bg3); }
+.bell-dot { position: absolute; top: 5px; right: 7px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 1px solid var(--bg2); }
+.section { display: none; }
+.section.active { display: block; }
+.metrics-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; margin-bottom: 20px; }
+.metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+.metric-icon { font-size: 20px; margin-bottom: 10px; }
+.metric-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+.metric-value { font-size: 26px; font-weight: 700; letter-spacing: -1px; }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.metric-card.blue { border-color: rgba(46,134,193,0.35); } .metric-card.blue .metric-value { color: var(--accent); }
+.metric-card.green { border-color: rgba(34,200,122,0.3); } .metric-card.green .metric-value { color: var(--green); }
+.metric-card.yellow { border-color: rgba(240,180,41,0.3); } .metric-card.yellow .metric-value { color: var(--yellow); }
+.metric-card.red { border-color: rgba(240,82,82,0.3); } .metric-card.red .metric-value { color: var(--red); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+.card-title i { color: var(--accent); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text3); border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 11px 12px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.02); }
+.td-actions { display: flex; align-items: center; gap: 6px; }
+.action-btn { background: none; border: 1px solid var(--border2); border-radius: 5px; padding: 4px 8px; color: var(--text2); cursor: pointer; font-size: 12px; transition: all 0.15s; }
+.action-btn:hover { background: var(--bg3); color: var(--text); }
+.action-btn.del:hover { border-color: var(--red); color: var(--red); }
+.form-row { margin-bottom: 14px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+.form-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+label.flabel { font-size: 12px; font-weight: 600; color: var(--text2); display: block; margin-bottom: 5px; }
+input, select, textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text); font-size: 13.5px; font-family: inherit; transition: border-color 0.15s; -webkit-appearance: none; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); background: var(--bg4); }
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+textarea { resize: vertical; min-height: 80px; }
+select option { background: var(--bg3); }
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: transparent; color: var(--text2); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; white-space: nowrap; }
+.btn:hover { background: var(--bg3); color: var(--text); }
+.btn-primary { background: var(--orange); color: #fff; border-color: var(--orange); }
+.btn-primary:hover { background: var(--orange2); border-color: var(--orange2); }
+.btn-success { background: rgba(34,200,122,0.12); color: var(--green); border-color: rgba(34,200,122,0.3); }
+.btn-success:hover { background: rgba(34,200,122,0.2); }
+.btn-danger { background: rgba(240,82,82,0.12); color: var(--red); border-color: rgba(240,82,82,0.3); }
+.btn-danger:hover { background: rgba(240,82,82,0.2); }
+.btn-info { background: rgba(46,134,193,0.12); color: var(--accent); border-color: rgba(46,134,193,0.3); }
+.btn-row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-ok { background: var(--green-bg); color: var(--green); }
+.badge-warn { background: var(--yellow-bg); color: var(--yellow); }
+.badge-danger { background: var(--red-bg); color: var(--red); }
+.badge-info { background: rgba(46,134,193,0.15); color: var(--accent); }
+.badge-gray { background: var(--bg4); color: var(--text2); }
+.alert-box { padding: 11px 14px; border-radius: var(--radius-sm); font-size: 13px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.alert-box.danger { background: var(--red-bg); border: 1px solid rgba(240,82,82,0.25); color: var(--red); }
+.alert-box.warn { background: var(--yellow-bg); border: 1px solid rgba(240,180,41,0.25); color: var(--yellow); }
+.alert-box.ok { background: var(--green-bg); border: 1px solid rgba(34,200,122,0.25); color: var(--green); }
+.alert-box.info { background: rgba(46,134,193,0.08); border: 1px solid rgba(46,134,193,0.25); color: var(--accent); }
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.tab { padding: 10px 18px; font-size: 13px; font-weight: 600; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.vehicle-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; margin-bottom: 20px; }
+.veh-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.veh-card:hover { border-color: var(--accent); background: var(--bg3); }
+.veh-head { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.veh-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.veh-plate { font-family: 'Courier New',monospace; font-size: 11px; font-weight: 700; background: var(--bg4); color: var(--text2); padding: 3px 8px; border-radius: 4px; letter-spacing: 0.05em; }
+.veh-stat { display: flex; justify-content: space-between; font-size: 12px; color: var(--text3); padding: 4px 0; }
+.veh-stat span:last-child { color: var(--text); font-weight: 600; }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; }
+.sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+.sidebar-overlay.open { display: block; }
+.modal-overlay.open { display: flex; }
+.modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius); padding: 24px; width: 620px; max-width: 95vw; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+.modal-title { font-size: 16px; font-weight: 700; }
+.modal-close { background: none; border: none; cursor: pointer; color: var(--text3); font-size: 18px; padding: 4px; transition: color 0.15s; }
+.modal-close:hover { color: var(--text); }
+#toast-container { position: fixed; top: 70px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 12px 16px; font-size: 13px; color: var(--text); display: flex; align-items: center; gap: 10px; min-width: 280px; max-width: 360px; box-shadow: var(--shadow); animation: slideIn 0.2s ease; }
+.toast.ok { border-left: 3px solid var(--green); }
+.toast.warn { border-left: 3px solid var(--yellow); }
+.toast.err { border-left: 3px solid var(--red); }
+@keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+.config-group { margin-bottom: 24px; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.section-h { font-size: 16px; font-weight: 700; color: var(--text); }
+.section-hsub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.report-preview { background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius); padding: 20px; font-size: 13px; line-height: 1.8; }
+.report-block { margin-bottom: 16px; }
+.report-block-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--accent); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid rgba(46,134,193,0.25); }
+.report-row { display: flex; justify-content: space-between; padding: 3px 0; }
+.report-row span:first-child { color: var(--text2); }
+.report-row span:last-child { font-weight: 600; }
+.empty { text-align: center; padding: 50px 20px; }
+.empty i { font-size: 40px; color: var(--text3); display: block; margin-bottom: 12px; }
+.empty p { color: var(--text3); font-size: 14px; }
+
+/* ── PNEU DIAGRAMA ── */
+.tire-diagram-wrap { position: relative; width: 220px; margin: 0 auto; }
+.tire-diagram-wrap svg { width: 100%; height: auto; display: block; }
+.tire-btn { cursor: pointer; }
+.tire-btn:hover rect, .tire-btn:hover ellipse { filter: brightness(1.4); }
+.tire-tooltip-popup {
+  position: absolute; background: var(--bg2); border: 1px solid var(--accent);
+  border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px;
+  color: var(--text); white-space: nowrap; z-index: 50;
+  pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  min-width: 190px;
+}
+.tire-tooltip-popup strong { display: block; font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+
+/* ── VEH RESUMO MODAL ── */
+.veh-resumo-stat { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.veh-resumo-stat:last-child { border-bottom: none; }
+.veh-resumo-stat span:first-child { color: var(--text2); }
+.veh-resumo-stat span:last-child { font-weight: 700; color: var(--text); }
+
+/* ── POSTO ── */
+.posto-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.posto-item:last-child { border-bottom: none; }
+
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; }
+  .hamburger { display: block; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .vehicle-grid { grid-template-columns: 1fr; }
+  .form-grid, .form-grid3, .grid2, .grid3 { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+  .content { padding: 14px; }
+}
+
+/* ── PIN LOGIN ── */
+#pin-login-screen {
+  position: fixed; inset: 0; z-index: 10000;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 0;
+}
+.pin-login-logo {
+  width: 64px; height: 64px;
+  background: var(--orange);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; color: #fff; margin-bottom: 20px;
+}
+.pin-login-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+.pin-login-sub { font-size: 13px; color: var(--text2); margin-bottom: 32px; }
+.pin-user-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; width: 100%; max-width: 380px; margin-bottom: 28px;
+}
+.pin-user-btn {
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 14px 8px;
+  cursor: pointer; text-align: center; transition: all 0.15s;
+  color: var(--text); font-family: inherit; font-size: 14px;
+  -webkit-appearance: none; appearance: none;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.pin-user-btn:hover { border-color: var(--orange); background: var(--bg4); }
+.pin-user-btn.selected { border-color: var(--orange); background: rgba(242,101,34,0.12); }
+.pin-user-icon {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; margin: 0 auto;
+  background: var(--bg4); color: var(--orange);
+  flex-shrink: 0; pointer-events: none;
+}
+.pin-user-name { font-size: 13px; font-weight: 600; }
+.pin-keypad-wrap {
+  display: none; flex-direction: column; align-items: center; gap: 0;
+  width: 100%; max-width: 300px;
+}
+.pin-keypad-wrap.show { display: flex; }
+.pin-who { font-size: 14px; color: var(--text2); margin-bottom: 16px; }
+.pin-who strong { color: var(--text); }
+.pin-dots { display: flex; gap: 12px; margin-bottom: 20px; }
+.pin-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--border2); background: transparent; transition: background 0.15s;
+}
+.pin-dot.filled { background: var(--orange); border-color: var(--orange); }
+.pin-keypad {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; width: 100%;
+}
+.pin-key {
+  background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--text); font-size: 22px; font-weight: 700;
+  border-radius: 12px; padding: 16px 0; cursor: pointer;
+  transition: background 0.1s;
+}
+.pin-key:active { background: var(--orange); color: #fff; }
+.pin-key-empty { background: transparent; border: none; cursor: default; }
+.pin-key-del { font-size: 18px; color: var(--text2); }
+.pin-error { color: var(--red); font-size: 13px; min-height: 20px; margin-bottom: 10px; text-align: center; }
+.pin-back-btn {
+  margin-top: 16px; background: none; border: none;
+  color: var(--text2); font-size: 13px; cursor: pointer; font-family: inherit;
+}
+.pin-back-btn:hover { color: var(--text); }
+/* ── LOG PANEL ── */
+.log-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 0; border-bottom: 0.5px solid var(--border);
+  font-size: 13px;
+}
+.log-item:last-child { border-bottom: none; }
+.log-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--bg4); display: flex; align-items: center;
+  justify-content: center; font-size: 11px; font-weight: 700;
+  color: var(--orange); flex-shrink: 0; margin-top: 1px;
+}
+.log-body { flex: 1; }
+.log-action { color: var(--text); }
+.log-action strong { color: var(--orange); }
+.log-time { font-size: 11px; color: var(--text3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<!-- ══ TELA DE LOGIN COM PIN ══ -->
+<div id="pin-login-screen" style="position:fixed;inset:0;z-index:10000;background:#0c0f16;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+  <img src="/logo.png" alt="CentralNet" style="width:180px;margin-bottom:8px;display:block">
+  <p style="color:#8da4c0;font-size:13px;margin-bottom:28px;font-family:sans-serif;text-align:center">Gestão de Frota — Identifique-se</p>
+  <div id="pin-user-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:360px">
+    <button type="button" onclick="selectUser('victor','Victor','V','1947')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:none">V</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Victor</span>
+    </button>
+    <button type="button" onclick="selectUser('abelardo','Abelardo','A','2831')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:none">A</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Abelardo</span>
+    </button>
+    <button type="button" onclick="selectUser('wellington','Wellington','W','5074')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:none">W</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Wellington</span>
+    </button>
+    <button type="button" onclick="selectUser('rafael','Rafael','R','3362')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;pointer-events:none">R</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Rafael</span>
+    </button>
+    <button type="button" onclick="selectUser('alberevam','Alberevam','AL','6619')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">AL</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Alberevam</span>
+    </button>
+    <button type="button" onclick="selectUser('antonni','Antonni','AN','7823')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">AN</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Antonni</span>
+    </button>
+  </div>
+  <div id="pin-keypad-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:300px;margin-top:16px">
+    <p id="pin-who" style="color:#8da4c0;font-size:14px;margin-bottom:16px;font-family:sans-serif;text-align:center"></p>
+    <div style="display:flex;gap:12px;margin-bottom:12px">
+      <span id="gdot-0" class="pin-dot"></span>
+      <span id="gdot-1" class="pin-dot"></span>
+      <span id="gdot-2" class="pin-dot"></span>
+      <span id="gdot-3" class="pin-dot"></span>
+    </div>
+    <p id="pin-gerror" style="color:#f05252;font-size:13px;min-height:20px;margin-bottom:10px;font-family:sans-serif;text-align:center"></p>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%">
+      <button type="button" onclick="gPinPress('1',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">1</button>
+      <button type="button" onclick="gPinPress('2',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">2</button>
+      <button type="button" onclick="gPinPress('3',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">3</button>
+      <button type="button" onclick="gPinPress('4',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">4</button>
+      <button type="button" onclick="gPinPress('5',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">5</button>
+      <button type="button" onclick="gPinPress('6',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">6</button>
+      <button type="button" onclick="gPinPress('7',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">7</button>
+      <button type="button" onclick="gPinPress('8',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">8</button>
+      <button type="button" onclick="gPinPress('9',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">9</button>
+      <button type="button" style="background:transparent;border:none"></button>
+      <button type="button" onclick="gPinPress('0',this)" style="background:#1a2030;border:1px solid #2a3d5e;color:#e8edf5;font-size:22px;font-weight:700;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">0</button>
+      <button type="button" onclick="gPinBack()" style="background:#1a2030;border:1px solid #2a3d5e;color:#8da4c0;font-size:20px;border-radius:12px;padding:16px 0;cursor:pointer;font-family:sans-serif;touch-action:manipulation">⌫</button>
+    </div>
+    <button type="button" onclick="backToUsers()" style="margin-top:16px;background:none;border:none;color:#8da4c0;font-size:13px;cursor:pointer;font-family:sans-serif">← Trocar usuário</button>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+    <div class="logo" style="justify-content:center;padding:24px 16px">
+      <img src="/logo.png" alt="CentralNet" style="height:104px;width:auto;display:block">
+    </div>
+    <nav class="nav">
+      <div class="nav-label">Principal</div>
+      <div class="nav-item active" onclick="showSection('dashboard',this)"><i class="fa fa-chart-pie icon"></i> Painel</div>
+      <div class="nav-item" onclick="showSection('frota',this)"><i class="fa fa-car icon"></i> Frota</div>
+      <div class="nav-label">Operacional</div>
+      <div class="nav-item" onclick="showSection('abastecimento',this)"><i class="fa fa-gas-pump icon"></i> Combustível</div>
+      <div class="nav-item" onclick="showSection('manutencao',this)"><i class="fa fa-wrench icon"></i> Manutenção <span class="nav-badge" id="badge-mnt" style="display:none">0</span></div>
+      <div class="nav-item" onclick="showSection('pneus',this)"><i class="fa fa-circle-dot icon"></i> Pneus</div>
+      <div class="nav-item" onclick="showSection('checklist',this)"><i class="fa fa-list-check icon"></i> Checklist</div>
+      <div class="nav-label">Equipe</div>
+      <div class="nav-item" onclick="showSection('cnh',this)"><i class="fa fa-id-card icon"></i> Motoristas / CNH <span class="nav-badge" id="badge-cnh" style="display:none">0</span></div>
+      <div class="nav-label">Relatórios</div>
+      <div class="nav-item" onclick="showSection('log',this)">
+        <i class="fa fa-scroll icon"></i> Log de atividades
+      </div>
+      <div class="nav-label">Sistema</div>
+      <div class="nav-item" onclick="showSection('relatorio',this)"><i class="fa fa-envelope icon"></i> Enviar relatório</div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="nav-item" onclick="showSection('config',this)"><i class="fa fa-gear icon"></i> Configurações</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="hamburger" onclick="toggleSidebar()"><i class="fa fa-bars"></i></button>
+        <div class="page-title" id="page-title"><i class="fa fa-chart-pie" style="color:var(--accent)"></i> Painel</div>
+      </div>
+      <div class="header-actions">
+        <span id="header-user-badge" style="font-size:12px;color:var(--text2);background:var(--bg3);border:0.5px solid var(--border2);border-radius:20px;padding:4px 12px;cursor:pointer" onclick="logoutGestor()" title="Sair"></span>
+        <button class="alert-bell" title="Alertas"><i class="fa fa-bell"></i><span class="bell-dot" id="bell-dot" style="display:none"></span></button>
+        <button class="btn btn-sm" onclick="sendTelegramReport()"><i class="fa fa-paper-plane"></i> Telegram</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ══ DASHBOARD ══ -->
+      <div id="s-dashboard" class="section active">
+        <div class="metrics-grid" id="dash-metrics"></div>
+
+        <!-- Seletor de veículo para resumo rápido -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title"><i class="fa fa-magnifying-glass"></i> Resumo rápido por veículo</div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <select id="dash-resumo-veh" style="width:250px"><option value="">Selecione um veículo...</option></select>
+            <button class="btn btn-info" onclick="openVehResumo()"><i class="fa fa-chart-bar"></i> Ver resumo completo</button>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="card">
+              <div class="card-title"><i class="fa fa-triangle-exclamation"></i> Alertas ativos</div>
+              <div id="dash-alerts"><div class="empty"><i class="fa fa-circle-check"></i><p>Nenhum alerta</p></div></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title"><i class="fa fa-car"></i> Status da frota</div>
+              <div class="table-wrap"><table>
+                <thead><tr><th>Veículo</th><th>Responsável</th><th>KM</th><th>Km/L</th><th>Custo/km</th></tr></thead>
+                <tbody id="dash-fleet-table"></tbody>
+              </table></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fa fa-gas-pump"></i> Últimos abastecimentos</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Litros</th><th>Total</th><th>R$/L</th><th>Km/L</th><th>Custo/km</th><th>Posto</th></tr></thead>
+            <tbody id="dash-fuel-table"></tbody>
+          </table></div>
+        </div>
+      </div>
+
+      <!-- ══ FROTA ══ -->
+      <div id="s-frota" class="section">
+        <div class="section-header">
+          <div><div class="section-h">Frota</div><div class="section-hsub">Veículos cadastrados</div></div>
+          <button class="btn btn-primary" onclick="openModalVeh()"><i class="fa fa-plus"></i> Novo veículo</button>
+        </div>
+        <div class="vehicle-grid" id="frota-grid"></div>
+      </div>
+
+      <!-- ══ ABASTECIMENTO ══ -->
+      <div id="s-abastecimento" class="section">
+        <div class="section-header">
+          <div><div class="section-h">Combustível</div><div class="section-hsub">Controle de abastecimentos</div></div>
+          <button class="btn btn-primary" onclick="openFuelModal()"><i class="fa fa-plus"></i> Registrar</button>
+        </div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'fuel-historico')">Histórico</div>
+          <div class="tab" onclick="switchTab(this,'fuel-relatorio');renderFuelReport()">Relatório Mensal</div>
+        </div>
+        <div id="fuel-historico">
+          <div class="metrics-grid" id="fuel-metrics"></div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-list"></i> Histórico de abastecimentos</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Combustível</th><th>Litros</th><th>R$/L</th><th>Total</th><th>KM</th><th>Km/L</th><th>Custo/km</th><th>Posto</th><th>Nota</th><th></th></tr></thead>
+              <tbody id="fuel-table"></tbody>
+            </table></div>
+          </div>
+        </div>
+        <div id="fuel-relatorio" style="display:none">
+          <div class="card" style="margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div>
+                <label class="flabel" style="margin-bottom:5px;display:block">Mês de referência</label>
+                <input type="month" id="fuel-rel-mes" style="width:180px" onchange="renderFuelReport()">
+              </div>
+              <div style="margin-top:18px">
+                <button class="btn" onclick="exportFuelReportCSV()"><i class="fa fa-download"></i> Exportar CSV</button>
+              </div>
+            </div>
+          </div>
+          <div class="metrics-grid" id="fuel-rel-metrics" style="margin-bottom:16px"></div>
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-title"><i class="fa fa-car"></i> Resumo por veículo</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Veículo</th><th>Abastecimentos</th><th>Litros</th><th>Total (R$)</th><th>R$/L médio</th><th>Km/L médio</th><th>Custo médio/km</th></tr></thead>
+              <tbody id="fuel-rel-resumo"></tbody>
+            </table></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="fa fa-list"></i> Detalhamento do mês</div>
+            <div class="table-wrap"><table>
+              <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Combustível</th><th>Litros</th><th>R$/L</th><th>Total</th><th>KM</th><th>Km/L</th><th>Custo/km</th><th>Posto</th></tr></thead>
+              <tbody id="fuel-rel-detalhe"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ MANUTENÇÃO ══ -->
+      <div id="s-manutencao" class="section">
+        <div class="section-header">
+          <div><div class="section-h">Manutenção</div></div>
+          <button class="btn btn-primary" onclick="openModal('modal-maint')"><i class="fa fa-plus"></i> Nova OS</button>
+        </div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'mt-todas')">Todas</div>
+          <div class="tab" onclick="switchTab(this,'mt-prev')">Preventivas</div>
+          <div class="tab" onclick="switchTab(this,'mt-corr')">Corretivas</div>
+          <div class="tab" onclick="switchTab(this,'mt-venc')">Vencidas / Em breve</div>
+        </div>
+        <div id="mt-todas">
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Tipo</th><th>Serviço</th><th>KM</th><th>Custo</th><th>Fornecedor</th><th>Status</th><th></th></tr></thead>
+            <tbody id="maint-table-todas"></tbody>
+          </table></div></div>
+        </div>
+        <div id="mt-prev" style="display:none">
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Serviço</th><th>KM</th><th>Custo</th><th>Próx. KM</th><th></th></tr></thead>
+            <tbody id="maint-table-prev"></tbody>
+          </table></div></div>
+        </div>
+        <div id="mt-corr" style="display:none">
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Serviço</th><th>Custo</th><th>Fornecedor</th><th>NF</th><th></th></tr></thead>
+            <tbody id="maint-table-corr"></tbody>
+          </table></div></div>
+        </div>
+        <div id="mt-venc" style="display:none"><div id="maint-alerts-list"></div></div>
+      </div>
+
+      <!-- ══ PNEUS ══ -->
+      <div id="s-pneus" class="section">
+        <div class="section-header">
+          <div><div class="section-h">Pneus</div><div class="section-hsub">Mín. legal: 1,6mm · Clique em um veículo para ver o diagrama</div></div>
+          <button class="btn btn-primary" onclick="openModalPneu()"><i class="fa fa-plus"></i> Registrar pneu</button>
+        </div>
+        <!-- Diagrama por veículo -->
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-title"><i class="fa fa-car"></i> Diagrama de pneus por veículo</div>
+          <div style="margin-bottom:14px"><select id="pneu-diagrama-veh" onchange="renderPneuDiagramaGestor()" style="max-width:280px"><option value="">Selecione um veículo</option></select></div>
+          <div id="pneu-diagrama-area" style="position:relative;min-height:60px"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="fa fa-history"></i> Histórico de pneus</div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Data</th><th>Veículo</th><th>Motorista</th><th>Posição</th><th>Marca/Modelo</th><th>Inst. em</th><th>KM inst.</th><th>Local compra</th><th>Valor</th><th>Banda (mm)</th><th>Pressão</th><th>Situação</th></tr></thead>
+            <tbody id="tire-history-table"></tbody>
+          </table></div>
+        </div>
+      
+    <!-- Painel de edição de pneu -->
+    <input type="hidden" id="tire-data">
+    <input type="hidden" id="tire-km">
+    <input type="hidden" id="tire-veh">
+    <div id="tire-edit-panel" style="display:none" class="card">
+      <div class="card-title" id="tire-edit-title" style="justify-content:space-between">
+        Editando pneu
+        <button class="btn btn-sm" onclick="document.getElementById('tire-edit-panel').style.display='none'"><i class="fa fa-xmark"></i></button>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="flabel">Marca</label><input id="tire-edit-marca" type="text" placeholder="Ex: Pirelli"></div>
+        <div class="form-row"><label class="flabel">Modelo</label><input id="tire-edit-modelo" type="text" placeholder="Ex: Scorpion"></div>
+      </div>
+      <div class="form-grid3">
+        <div class="form-row"><label class="flabel">Data instalação</label><input id="tire-edit-dataInst" type="date"></div>
+        <div class="form-row"><label class="flabel">KM instalação</label><input id="tire-edit-kmInst" type="number" placeholder="0"></div>
+        <div class="form-row"><label class="flabel">Valor (R$)</label><input id="tire-edit-valor" type="number" step="0.01" placeholder="0.00"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="flabel">Local compra</label><input id="tire-edit-local" type="text" placeholder="Nome da loja"></div>
+        <div class="form-row"><label class="flabel">Banda (mm)</label><input id="tire-edit-prof" type="number" step="0.1" placeholder="8.0"></div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row"><label class="flabel">Pressão (PSI)</label><input id="tire-edit-pressao" type="number" step="0.1" placeholder="32"></div>
+        <div class="form-row"><label class="flabel">Situação</label>
+          <select id="tire-edit-sit"><option value="ok">OK</option><option value="atencao">Atenção</option><option value="trocar">Trocar</option></select>
+        </div>
+      </div>
+      <div class="form-row"><label class="flabel">Observações</label><textarea id="tire-edit-obs" placeholder="Observações..."></textarea></div>
+      <div class="btn-row">
+        <button class="btn" onclick="document.getElementById('tire-edit-panel').style.display='none'">Cancelar</button>
+        <button class="btn btn-primary" onclick="savePneu()"><i class="fa fa-save"></i> Salvar pneu</button>
+      </div>
+    </div>
+</div>
+
+      <!-- ══ CHECKLIST ══ -->
+      <div id="s-checklist" class="section">
+        <div class="section-header"><div><div class="section-h">Checklist</div></div></div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'ck-hist')">Histórico</div>
+          <div class="tab" onclick="switchTab(this,'ck-fotos');renderFotosGestor()">📸 Fotos semanais</div>
+        </div>
+        <div id="ck-hist">
+          <div class="card"><div class="table-wrap"><table>
+            <thead><tr><th>Data/Hora</th><th>Tipo</th><th>Veículo</th><th>Motorista</th><th>Itens OK</th><th>Obs</th></tr></thead>
+            <tbody id="checklist-hist-table"></tbody>
+          </table></div></div>
+        </div>
+        <div id="ck-fotos" style="display:none">
+          <div class="card" style="margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div><label class="flabel" style="margin-bottom:5px;display:block">Filtrar por veículo</label>
+                <select id="fotos-filtro-veh" onchange="renderFotosGestor()" style="width:200px"><option value="">Todos os veículos</option></select></div>
+              <div><label class="flabel" style="margin-bottom:5px;display:block">Filtrar por mês</label>
+                <input type="month" id="fotos-filtro-mes" onchange="renderFotosGestor()" style="width:160px"></div>
+            </div>
+          </div>
+          <div id="fotos-gestor-lista"></div>
+        </div>
+      </div>
+
+      <!-- ══ CNH / MOTORISTAS ══ -->
+      <div id="s-cnh" class="section">
+        <div class="section-header">
+          <div><div class="section-h">Motoristas e CNH</div></div>
+          <button class="btn btn-primary" onclick="abrirModalDriver()"><i class="fa fa-plus"></i> Novo motorista</button>
+        </div>
+        <div id="cnh-alerts" style="margin-bottom:12px"></div>
+        <div class="card"><div class="table-wrap"><table>
+          <thead><tr><th>Motorista</th><th>CPF</th><th>CNH</th><th>Cat.</th><th>Validade</th><th>Dias rest.</th><th>Telefone</th><th>Status</th><th>Veículo</th><th>PIN</th><th></th></tr></thead>
+          <tbody id="cnh-table"></tbody>
+        </table></div></div>
+      </div>
+
+      <!-- ══ RELATÓRIO ══ -->
+      <div id="s-relatorio" class="section">
+        <div class="section-h" style="margin-bottom:18px">Relatório por e-mail</div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title"><i class="fa fa-sliders"></i> Configurar envio</div>
+            <div class="form-row"><label class="flabel">E-mail destinatário *</label><input id="rel-email" type="email" placeholder="gestor@empresa.com.br"></div>
+            <div class="form-row"><label class="flabel">Período</label>
+              <select id="rel-periodo"><option value="7">Últimos 7 dias</option><option value="30" selected>Últimos 30 dias</option><option value="90">Últimos 90 dias</option></select>
+            </div>
+            <div class="form-row"><label class="flabel" style="margin-bottom:10px">Incluir no relatório</label>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);margin:0;background:none;border:none;padding:0"><input type="checkbox" id="rel-combustivel" checked> Autonomia e combustível</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);margin:0;background:none;border:none;padding:0"><input type="checkbox" id="rel-manutencao" checked> Manutenções realizadas</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);margin:0;background:none;border:none;padding:0"><input type="checkbox" id="rel-pneus" checked> Estado dos pneus</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);margin:0;background:none;border:none;padding:0"><input type="checkbox" id="rel-cnh" checked> CNHs próximas do vencimento</label>
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text);margin:0;background:none;border:none;padding:0"><input type="checkbox" id="rel-alertas" checked> Alertas ativos</label>
+              </div>
+            </div>
+            <div class="btn-row" style="justify-content:flex-start;margin-top:20px">
+              <button class="btn" onclick="previewReport()"><i class="fa fa-eye"></i> Pré-visualizar</button>
+              <button class="btn btn-primary" onclick="sendEmailReport()"><i class="fa fa-paper-plane"></i> Enviar</button>
+            </div>
+          </div>
+          <div>
+            <div id="report-preview-area" style="display:none">
+              <div class="card"><div class="card-title"><i class="fa fa-file-lines"></i> Pré-visualização</div>
+                <div class="report-preview" id="report-content"></div>
+              </div>
+            </div>
+            <div class="card" id="report-placeholder">
+              <div class="empty"><i class="fa fa-file-lines"></i><p>Clique em "Pré-visualizar"</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CONFIG ══ -->
+      <div id="s-config" class="section">
+        <div class="section-h" style="margin-bottom:18px">Configurações</div>
+
+        <!-- POSTOS DE COMBUSTÍVEL -->
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between">
+            <span><i class="fa fa-gas-pump"></i> Postos de combustível</span>
+            <button class="btn btn-primary btn-sm" onclick="openModal('modal-postos')"><i class="fa fa-plus"></i> Gerenciar postos</button>
+          </div>
+          <div id="postos-config-preview"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="fa fa-envelope"></i> EmailJS</div>
+          <div class="form-grid">
+            <div class="form-row"><label class="flabel">Service ID</label><input id="cfg-ejs-service" type="text" placeholder="service_xxxxxxx"></div>
+            <div class="form-row"><label class="flabel">Template ID</label><input id="cfg-ejs-template" type="text" placeholder="template_xxxxxxx"></div>
+          </div>
+          <div class="form-row"><label class="flabel">Public Key</label><input id="cfg-ejs-pubkey" type="text" placeholder="xXxXxXxXxXxXxXxX"></div>
+          <div class="card-title" style="margin-top:4px"><i class="fa fa-paper-plane"></i> Telegram Bot</div>
+          <div class="form-grid">
+            <div class="form-row"><label class="flabel">Bot Token</label><input id="cfg-tg-token" type="text" placeholder="1234567890:ABCdef..."></div>
+            <div class="form-row"><label class="flabel">Chat ID</label><input id="cfg-tg-chat" type="text" placeholder="-100123456789"></div>
+          </div>
+          <div class="card-title" style="margin-top:4px"><i class="fa fa-building"></i> Empresa</div>
+          <div class="form-grid">
+            <div class="form-row"><label class="flabel">Nome da empresa</label><input id="cfg-empresa" type="text" placeholder="CentralNet"></div>
+            <div class="form-row"><label class="flabel">Alertar CNH (dias antes)</label><input id="cfg-cnh-dias" type="number" value="30" min="1"></div>
+          </div>
+          <div class="form-row"><label class="flabel">Alertar manutenção (km de antecedência)</label><input id="cfg-mnt-km" type="number" value="1000" min="100"></div>
+          <div class="btn-row" style="justify-content:flex-start;margin-top:8px">
+            <button class="btn btn-primary" onclick="saveConfig()"><i class="fa fa-save"></i> Salvar configurações</button>
+            <button class="btn btn-danger" onclick="clearAllData()"><i class="fa fa-trash"></i> Limpar todos os dados</button>
+          </div>
+        </div>
+
+      <!-- ══ LOG DE ATIVIDADES ══ -->
+      <div id="s-log" class="section">
+        <div class="section-header">
+          <div><div class="section-h">Log de atividades</div><div class="section-hsub">Registro de todas as ações por usuário</div></div>
+          <button class="btn btn-sm" onclick="clearLog()" style="color:var(--text3)"><i class="fa fa-trash"></i> Limpar log</button>
+        </div>
+        <div class="card">
+          <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+            <select id="log-filter-user" onchange="renderLog()" style="max-width:180px">
+              <option value="">Todos os usuários</option>
+              <option value="Victor">Victor</option>
+              <option value="Abelardo">Abelardo</option>
+              <option value="Wellington">Wellington</option>
+              <option value="Rafael">Rafael</option>
+              <option value="Alberevam">Alberevam</option>
+              <option value="Antonni">Antonni</option>
+            </select>
+            <select id="log-filter-action" onchange="renderLog()" style="max-width:200px">
+              <option value="">Todas as ações</option>
+              <option value="Veículo">Veículo</option>
+              <option value="Motorista">Motorista</option>
+              <option value="Abastecimento">Abastecimento</option>
+              <option value="Manutenção">Manutenção</option>
+              <option value="Pneu">Pneu</option>
+              <option value="Login">Login</option>
+            </select>
+          </div>
+          <div id="log-list"></div>
+        </div>
+      </div>
+
+
+      </div>
+
+
+<!-- ══ MODAL: VEÍCULO ══ -->
+<div id="modal-veh" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-veh-title">Novo veículo</div>
+      <button class="modal-close" onclick="closeModal('modal-veh')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Modelo *</label><input id="veh-modelo" type="text" placeholder="Ex: Toyota Hilux"></div>
+      <div class="form-row"><label class="flabel">Placa *</label><input id="veh-placa" type="text" placeholder="ABC-1234" style="text-transform:uppercase"></div>
+    </div>
+    <div class="form-grid3">
+      <div class="form-row"><label class="flabel">Tipo</label>
+        <select id="veh-tipo"><option value="carro">Carro</option><option value="moto">Moto</option><option value="caminhao">Caminhão</option><option value="van">Van</option></select>
+      </div>
+      <div class="form-row"><label class="flabel">Ano</label><input id="veh-ano" type="number" placeholder="2024"></div>
+      <div class="form-row"><label class="flabel">Cor</label><input id="veh-cor" type="text" placeholder="Branco"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">KM Atual</label><input id="veh-km" type="number" placeholder="0"></div>
+      <div class="form-row"><label class="flabel">Combustível</label>
+        <select id="veh-combustivel"><option value="flex">Flex</option><option value="gasolina">Gasolina</option><option value="etanol">Etanol</option><option value="diesel">Diesel</option><option value="gnv">GNV</option><option value="eletrico">Elétrico</option></select>
+      </div>
+    </div>
+    <input type="hidden" id="veh-tanque">
+    <input type="hidden" id="veh-chassi">
+    <input type="hidden" id="veh-obs">
+    <input type="hidden" id="veh-status">
+    <div class="form-row"><label class="flabel">Consumo médio (km/L)</label><input id="veh-consumo" type="number" step="0.1" placeholder="10.0"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('modal-veh')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveVehicle()"><i class="fa fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: RESUMO VEÍCULO ══ -->
+<div id="modal-veh-resumo" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-resumo-title">Resumo do veículo</div>
+      <button class="modal-close" onclick="closeModal('modal-veh-resumo')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div id="modal-resumo-body"></div>
+  </div>
+</div>
+
+<!-- ══ MODAL: MOTORISTA ══ -->
+<div id="modal-driver" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-driver-title">Novo motorista</div>
+      <button class="modal-close" onclick="closeModal('modal-driver')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Nome *</label><input id="drv-nome" type="text" placeholder="Nome completo"></div>
+      <div class="form-row"><label class="flabel">CPF</label><input id="drv-cpf" type="text" placeholder="000.000.000-00"></div>
+    </div>
+    <div class="form-grid3">
+      <div class="form-row"><label class="flabel">CNH Nº</label><input id="drv-cnh" type="text" placeholder="00000000000"></div>
+      <div class="form-row"><label class="flabel">Categoria</label>
+        <select id="drv-cat"><option value="B">B</option><option value="C">C</option><option value="D">D</option><option value="E">E</option><option value="AB">AB</option><option value="AC">AC</option></select>
+      </div>
+      <div class="form-row"><label class="flabel">Validade CNH</label><input id="drv-validade" type="date"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Telefone</label><input id="drv-tel" type="text" placeholder="(81) 99999-9999"></div>
+      <div class="form-row"><label class="flabel">Veículo responsável</label>
+        <select id="drv-veh" onchange="document.getElementById('drv-veiculo-designado').value=this.value"><option value="">Nenhum</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="flabel">PIN de acesso (4 dígitos)</label><input id="drv-pin" type="text" maxlength="4" placeholder="0000"></div>
+    <input type="hidden" id="drv-email">
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('modal-driver')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveDriver()"><i class="fa fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: ABASTECIMENTO ══ -->
+<div id="modal-fuel" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Registrar abastecimento</div>
+      <button class="modal-close" onclick="closeModal('modal-fuel')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Veículo *</label><select id="fuel-veh"></select></div>
+      <div class="form-row"><label class="flabel">Motorista</label><select id="fuel-drv"></select></div>
+    </div>
+    <div class="form-grid3">
+      <div class="form-row"><label class="flabel">Data *</label><input id="fuel-data" type="date"></div>
+      <div class="form-row"><label class="flabel">Litros *</label><input id="fuel-litros" type="number" step="0.01" placeholder="0.00"></div>
+      <div class="form-row"><label class="flabel">Valor total (R$) *</label><input id="fuel-total" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">KM atual</label><input id="fuel-km" type="number" placeholder="0"></div>
+      <div class="form-row"><label class="flabel">Combustível</label>
+        <select id="fuel-tipo"><option value="gasolina">Gasolina</option><option value="etanol">Etanol</option><option value="diesel">Diesel</option><option value="gnv">GNV</option><option value="flex">Flex</option></select>
+      </div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Posto</label><select id="fuel-posto-select"><option value="">Selecione um posto</option></select></div>
+      <div class="form-row"><label class="flabel">Nota fiscal</label><input id="fuel-nf" type="text" placeholder="Nº da nota"></div>
+    </div>
+    <div class="form-row"><label class="flabel">Observações</label><textarea id="fuel-obs" placeholder="Observações..."></textarea></div>
+    <div id="fuel-modal-calc" style="display:none;background:var(--bg3);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--text2);margin-bottom:8px"></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('modal-fuel')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFuel()"><i class="fa fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: MANUTENÇÃO ══ -->
+<div id="modal-maint" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Ordem de Serviço</div>
+      <button class="modal-close" onclick="closeModal('modal-maint')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Veículo *</label><select id="maint-veh"></select></div>
+      <div class="form-row"><label class="flabel">Motorista</label><select id="maint-drv"></select></div>
+    </div>
+    <div class="form-grid3">
+      <div class="form-row"><label class="flabel">Data *</label><input id="maint-data" type="date"></div>
+      <div class="form-row"><label class="flabel">Tipo</label>
+        <select id="maint-tipo"><option value="preventiva">Preventiva</option><option value="corretiva">Corretiva</option></select>
+      </div>
+      <div class="form-row"><label class="flabel">Status</label>
+        <select id="maint-status"><option value="agendada">Agendada</option><option value="em_andamento">Em andamento</option><option value="concluida">Concluída</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="flabel">Serviço *</label><input id="maint-servico" type="text" placeholder="Ex: Troca de óleo"></div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">KM</label><input id="maint-km" type="number" placeholder="0"></div>
+      <div class="form-row"><label class="flabel">Custo (R$)</label><input id="maint-custo" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Fornecedor</label><input id="maint-fornecedor" type="text" placeholder="Nome da oficina"></div>
+      <div class="form-row"><label class="flabel">Nota fiscal</label><input id="maint-nf" type="text" placeholder="Nº da nota"></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Próxima manutenção (km)</label><input id="maint-prox-km" type="number" placeholder="0"></div>
+      <div class="form-row"><label class="flabel">Próxima data</label><input id="maint-prox-data" type="date"></div>
+    </div>
+    <input type="hidden" id="mnt-veh">
+    <input type="hidden" id="mnt-drv">
+    <input type="hidden" id="mnt-data">
+    <input type="hidden" id="mnt-tipo">
+    <input type="hidden" id="mnt-servico">
+    <input type="hidden" id="mnt-km">
+    <input type="hidden" id="mnt-custo">
+    <input type="hidden" id="mnt-status">
+    <input type="hidden" id="mnt-fornecedor">
+    <input type="hidden" id="mnt-nf">
+    <input type="hidden" id="mnt-prox-km">
+    <input type="hidden" id="mnt-prox-data">
+    <div class="form-row"><label class="flabel">Observações</label><textarea id="maint-obs" placeholder="Observações..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('modal-maint')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMaint()"><i class="fa fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: PNEU ══ -->
+<div id="modal-pneu" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-pneu-title">Pneu</div>
+      <button class="modal-close" onclick="closeModal('modal-pneu')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Veículo *</label><select id="pneu-veh"></select></div>
+      <div class="form-row"><label class="flabel">Posição *</label><select id="pneu-posicao">
+        <option value="Dianteiro esquerdo">Dianteiro esquerdo</option>
+        <option value="Dianteiro direito">Dianteiro direito</option>
+        <option value="Traseiro esquerdo">Traseiro esquerdo</option>
+        <option value="Traseiro direito">Traseiro direito</option>
+        <option value="Estepe">Estepe</option>
+        <option value="Dianteiro">Dianteiro</option>
+        <option value="Traseiro">Traseiro</option>
+      </select></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Marca</label><input id="pneu-marca" type="text" placeholder="Ex: Pirelli"></div>
+      <div class="form-row"><label class="flabel">Modelo</label><input id="pneu-modelo" type="text" placeholder="Ex: Scorpion ATR"></div>
+    </div>
+    <div class="form-grid3">
+      <div class="form-row"><label class="flabel">Data instalação</label><input id="pneu-data" type="date" onchange="" ></div>
+      <div class="form-row"><label class="flabel">KM instalação</label><input id="pneu-km-inst" type="number" placeholder="0"></div>
+      <div class="form-row"><label class="flabel">Valor (R$)</label><input id="pneu-valor" type="number" step="0.01" placeholder="0.00"></div>
+    </div>
+    <div class="form-row"><label class="flabel">Local de compra</label><input id="pneu-local" type="text" placeholder="Nome da loja"></div>
+    <div class="form-row"><label class="flabel">Observações</label><textarea id="pneu-obs" placeholder="Observações..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal('modal-pneu')">Cancelar</button>
+      <button class="btn btn-primary" onclick="savePneu()"><i class="fa fa-save"></i> Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MODAL: POSTOS ══ -->
+<div id="modal-postos" class="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Postos de combustível</div>
+      <button class="modal-close" onclick="closeModal('modal-postos')"><i class="fa fa-xmark"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label class="flabel">Nome *</label><input id="posto-nome" type="text" placeholder="Nome do posto"></div>
+      <div class="form-row"><label class="flabel">Bandeira</label><input id="posto-bandeira" type="text" placeholder="Ex: Petrobras"></div>
+    </div>
+    <div class="form-row"><label class="flabel">Endereço</label><input id="posto-endereco" type="text" placeholder="Endereço completo"></div>
+    <div class="btn-row" style="justify-content:flex-start">
+      <button class="btn btn-primary" onclick="savePosto()"><i class="fa fa-plus"></i> Adicionar</button>
+    </div>
+    <div id="postos-list" style="margin-top:16px"></div>
+  </div>
+</div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ══════════════════════════════════════════
+//  DATA LAYER
+// ══════════════════════════════════════════
+const API_BASE = window.location.origin + '/api';
+const _cache = {};
+async function apiFetch(method, url, body) {
+  const opts = { method: method, headers: {} };
+  if (body) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+  try {
+    const r = await fetch(url, opts);
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) { return null; }
+}
+const api = {
+  get:  function(col)          { return apiFetch('GET',    API_BASE+'/'+col).then(function(d){ if(d !== null) _cache[col]=d; return d; }); },
+  post: function(col, body)    { return apiFetch('POST',   API_BASE+'/'+col, body); },
+  put:  function(col, id, body){ return apiFetch('PUT',    API_BASE+'/'+col+'/'+id, body); },
+  del:  function(col, id)      { return apiFetch('DELETE', API_BASE+'/'+col+'/'+id); }
+};
+function hydrateCache() {
+  var cols = ['vehicles','drivers','fuels','maintenances','tires','checklists','ocorrencias','kms','config'];
+  return Promise.all(cols.map(function(c){ return api.get(c); }));
+}
+function reload(col) { return api.get(col); }
+const DB = {
+  get: k => { if(k==='postos'){try{return JSON.parse(localStorage.getItem('postos')||'[]');}catch{return [];}} return _cache[k] ?? []; },
+  getObj: k => _cache[k] ?? {},
+  set: function(k,v) { _cache[k]=v; },
+  setObj: function(k,v) { _cache[k]=v; return api.post(k,v); },
+  uid: () => Date.now().toString(36)+Math.random().toString(36).slice(2,6)
+};
+
+// ══ CHECKLIST ITEMS ══
+const DAILY_ITEMS=[
+  'Nível de óleo do motor verificado','Nível do fluido de freio OK','Nível de água do radiador OK',
+  'Calibragem dos pneus (visual)','Faróis e lanternas funcionando','Limpadores de para-brisa operacionais',
+  'Espelhos retrovisores ajustados','Cintos de segurança funcionando','Documentos do veículo no porta-luvas',
+  'Extintor de incêndio presente e válido','Estepe, macaco e chave de roda','Sem barulho ou vibração anormal ao ligar'
+];
+const WEEKLY_ITEMS=[
+  'Desgaste visual da banda de rodagem dos pneus','Verificação de calibragem de todos os pneus',
+  'Nível do fluido de direção hidráulica','Nível do fluido de transmissão automática',
+  'Limpeza do filtro de ar (visual)','Estado das correias e mangueiras',
+  'Verificação da bateria e terminais','Funcionamento do ar condicionado',
+  'Verificação do freio de mão','Estado dos amortecedores (visual)',
+  'Limpeza interior e exterior do veículo','Estado dos para-choques e lataria'
+];
+
+// ══ PNEU POSIÇÕES ══
+const PNEU_POS_CARRO=[
+  {id:'de',label:'Dianteiro Esq.',x:55,y:85},
+  {id:'dd',label:'Dianteiro Dir.',x:185,y:85},
+  {id:'te',label:'Traseiro Esq.',x:55,y:210},
+  {id:'td',label:'Traseiro Dir.',x:185,y:210}
+];
+const PNEU_POS_MOTO=[
+  {id:'dianteiro',label:'Dianteiro',x:120,y:70},
+  {id:'traseiro',label:'Traseiro',x:120,y:220}
+];
+
+// ══════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════
+function fmtMoney(v){return 'R$ '+Number(v||0).toFixed(2).replace('.',',');}
+function fmtDate(d){return d?new Date(d+'T00:00:00').toLocaleDateString('pt-BR'):'—';}
+function fmtDateTime(d){return d?new Date(d).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';}
+function toast(msg,type='ok'){
+  const t=document.createElement('div');
+  t.className=`toast ${type}`;
+  t.innerHTML=`<i class="fa ${type==='ok'?'fa-circle-check':type==='warn'?'fa-triangle-exclamation':'fa-circle-xmark'}"></i>${msg}`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(()=>t.remove(),3800);
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');});
+});
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+function showSection(name, el){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles={dashboard:'Painel',frota:'Frota',abastecimento:'Combustível',manutencao:'Manutenção',pneus:'Pneus',checklist:'Checklist',cnh:'Motoristas / CNH',relatorio:'Relatório',config:'Configurações'};
+  const icons={dashboard:'fa-chart-pie',frota:'fa-car',abastecimento:'fa-gas-pump',manutencao:'fa-wrench',pneus:'fa-circle-dot',checklist:'fa-list-check',cnh:'fa-id-card',relatorio:'fa-envelope',config:'fa-gear'};
+  document.getElementById('page-title').innerHTML=`<i class="fa ${icons[name]||'fa-circle'}" style="color:var(--accent)"></i> ${titles[name]||name}`;
+  refreshAll();
+}
+
+function switchTab(el, targetId){
+  const bar=el.parentElement;
+  bar.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const content=bar.nextElementSibling;
+  let container=content;
+  while(container){
+    if(container.id===targetId){container.style.display='block';}
+    else if(container.tagName&&container.id){container.style.display='none';}
+    container=container.nextElementSibling;
+  }
+}
+
+// ══════════════════════════════════════════
+//  KM/L CÁLCULO CORRETO
+//  Distância = km[N] - km[N-1]; litros = litros[N]
+// ══════════════════════════════════════════
+function calcKmlForVehicle(vehId){
+  const fuels=DB.get('fuels')
+    .filter(f=>f.vehId===vehId && f.km && f.litros)
+    .sort((a,b)=>Number(a.km)-Number(b.km));
+  if(fuels.length<2) return null;
+  let totalKm=0,totalLitros=0,totalCusto=0,count=0;
+  const pontos=[];
+  for(let i=1;i<fuels.length;i++){
+    const dist=Number(fuels[i].km)-Number(fuels[i-1].km);
+    const lts=Number(fuels[i].litros);
+    const custo=Number(fuels[i].total||fuels[i].totalNota||0);
+    if(dist<=0||lts<=0) continue;
+    pontos.push({id:fuels[i].id,km:fuels[i].km,kml:dist/lts,custoKm:custo/dist,dist});
+    totalKm+=dist; totalLitros+=lts; totalCusto+=custo; count++;
+  }
+  if(!count) return null;
+  const ultimo=pontos[pontos.length-1];
+  return{
+    mediaKml:totalKm/totalLitros,
+    mediaCustoKm:totalCusto/totalKm,
+    ultimoKml:ultimo.kml,
+    ultimoCustoKm:ultimo.custoKm,
+    pontos
+  };
+}
+
+// Mapa de kml por id de abastecimento
+function buildKmlMap(vehId){
+  const fuels=DB.get('fuels')
+    .filter(f=>f.vehId===vehId&&f.km&&f.litros)
+    .sort((a,b)=>Number(a.km)-Number(b.km));
+  const map={};
+  for(let i=1;i<fuels.length;i++){
+    const dist=Number(fuels[i].km)-Number(fuels[i-1].km);
+    const lts=Number(fuels[i].litros);
+    const custo=Number(fuels[i].total||fuels[i].totalNota||0);
+    if(dist>0&&lts>0){
+      map[fuels[i].id]={kml:dist/lts, custoKm:custo/dist};
+    }
+  }
+  return map;
+}
+
+// ══════════════════════════════════════════
+//  POSTOS
+// ══════════════════════════════════════════
+function savePosto(){
+  const nome=document.getElementById('posto-nome').value.trim();
+  if(!nome){toast('Informe o nome do posto!','err');return;}
+  const obj={id:DB.uid(),nome,bandeira:document.getElementById('posto-bandeira').value.trim(),endereco:document.getElementById('posto-endereco').value.trim(),createdAt:new Date().toISOString()};
+  api.post('postos',obj).then(function(){
+    document.getElementById('posto-nome').value='';
+    document.getElementById('posto-bandeira').value='';
+    document.getElementById('posto-endereco').value='';
+    toast('Posto cadastrado!');
+    reload('postos').then(function(){
+      renderPostosList();
+      renderPostosConfigPreview();
+      populateFuelPostoSelect();
+    });
+  });
+}
+
+function deletePosto(id){
+  const _postos=DB.get('postos').filter(p=>p.id!==id);localStorage.setItem('postos',JSON.stringify(_postos));_cache['postos']=_postos;
+  renderPostosList(); renderPostosConfigPreview(); populateFuelPostoSelect();
+  toast('Posto removido');
+}
+
+function renderPostosList(){
+  const postos=DB.get('postos');
+  const el=document.getElementById('postos-list');
+  if(!el) return;
+  if(!postos.length){el.innerHTML='<div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Nenhum posto cadastrado ainda.</div>';return;}
+  el.innerHTML=postos.map(p=>`
+    <div class="posto-item">
+      <div>
+        <div style="font-size:14px;font-weight:700">⛽ ${p.nome}</div>
+        ${p.bandeira?`<div style="font-size:12px;color:var(--accent)">${p.bandeira}</div>`:''}
+        ${p.endereco?`<div style="font-size:12px;color:var(--text3)"><i class="fa fa-location-dot"></i> ${p.endereco}</div>`:''}
+      </div>
+      <button class="action-btn del" onclick="deletePosto('${p.id}')"><i class="fa fa-trash"></i></button>
+    </div>`).join('');
+}
+
+function renderPostosConfigPreview(){
+  const el=document.getElementById('postos-config-preview');
+  if(!el) return;
+  const postos=DB.get('postos');
+  if(!postos.length){el.innerHTML='<div style="color:var(--text3);font-size:13px">Nenhum posto cadastrado. Clique em "Gerenciar postos" para adicionar.</div>';return;}
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${postos.map(p=>`<span class="badge badge-info">⛽ ${p.nome}</span>`).join('')}</div>`;
+}
+
+function populateFuelPostoSelect(){
+  const sel=document.getElementById('fuel-posto-select');
+  if(!sel) return;
+  const postos=DB.get('postos');
+  sel.innerHTML='<option value="">Selecione um posto</option>'+postos.map(p=>`<option value="${p.id}">${p.nome}${p.bandeira?' · '+p.bandeira:''}</option>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  VEHICLES
+// ══════════════════════════════════════════
+let editVehId=null;
+function openModalVeh(id){
+  editVehId=id||null;
+  const vehs=DB.get('vehicles');
+  const v=id?vehs.find(x=>x.id===id):null;
+  document.getElementById('modal-veh-title').textContent=id?'Editar veículo':'Novo veículo';
+  ['modelo','placa','ano','cor','km','combustivel','consumo','tanque','chassi','renavam'].forEach(f=>{
+    const el=document.getElementById('veh-'+f);
+    if(el) el.value=v?v[f]||'':'';
+  });
+  document.getElementById('veh-tipo').value=v?v.tipo||'carro':'carro';
+  populateDriverSelect('veh-motorista', v?.motorista||'');
+  openModal('modal-veh');
+}
+
+async function saveVehicle(){
+  const modelo=document.getElementById('veh-modelo').value.trim();
+  const placa=document.getElementById('veh-placa').value.trim().toUpperCase();
+  if(!modelo||!placa){toast('Modelo e placa são obrigatórios!','err');return;}
+  const vehs=DB.get('vehicles');
+  const obj={
+    id:editVehId||DB.uid(),
+    modelo,placa,tipo:document.getElementById('veh-tipo').value,
+    ano:document.getElementById('veh-ano').value,
+    cor:document.getElementById('veh-cor').value,
+    km:Number(document.getElementById('veh-km').value)||0,
+    combustivel:document.getElementById('veh-combustivel').value,
+    consumo:document.getElementById('veh-consumo').value,
+    tanque:document.getElementById('veh-tanque').value,
+    chassi:document.getElementById('veh-chassi').value.toUpperCase(),
+    renavam:document.getElementById('veh-renavam').value,
+    motorista:document.getElementById('veh-motorista').value,
+    updatedAt:new Date().toISOString()
+  };
+  if(!obj.createdAt) obj.createdAt=new Date().toISOString();
+  if(editVehId){await api.put('vehicles',editVehId,obj);}
+  else{await api.post('vehicles',obj);}
+  await reload('vehicles');
+  closeModal('modal-veh');
+  const logMsg = editVehId ? `Editou veículo ${obj.placa} — ${obj.modelo}` : `Cadastrou veículo ${obj.placa} — ${obj.modelo}`;
+  addLog('Veículo', logMsg);
+  toast(editVehId?'Veículo atualizado!':'Veículo cadastrado!');
+  refreshAll();
+}
+
+async function deleteVehicle(id){
+  if(!confirm('Excluir este veículo e todos os seus dados?')) return;
+  await api.del('vehicles',id);
+  await reload('vehicles');
+  addLog('Veículo', `Excluiu veículo ID ${id}`);
+  toast('Veículo removido');refreshAll();
+}
+
+function renderFrota(){
+  const vehs=DB.get('vehicles');
+  const drivers=DB.get('drivers');
+  const el=document.getElementById('frota-grid');
+  if(!vehs.length){el.innerHTML='<div class="empty" style="grid-column:1/-1"><i class="fa fa-car"></i><p>Nenhum veículo cadastrado</p></div>';return;}
+  el.innerHTML=vehs.map(v=>{
+    const stats=calcKmlForVehicle(v.id);
+    const drv=drivers.find(d=>d.id===v.motorista);
+    const autonomia=v.consumo&&v.tanque?Math.round(parseFloat(v.consumo)*parseFloat(v.tanque)):null;
+    return `<div class="veh-card" onclick="openVehResumoById('${v.id}')">
+      <div class="veh-head">
+        <div>
+          <div class="veh-name">${v.tipo==='moto'?'🏍':'🚗'} ${v.modelo}</div>
+          <div class="veh-plate">${v.placa}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <button class="action-btn" onclick="event.stopPropagation();openModalVeh('${v.id}')"><i class="fa fa-pen"></i></button>
+          <button class="action-btn del" onclick="event.stopPropagation();deleteVehicle('${v.id}')"><i class="fa fa-trash"></i></button>
+        </div>
+      </div>
+      <div class="veh-stat"><span>KM atual</span><span>${Number(v.km||0).toLocaleString('pt-BR')} km</span></div>
+      <div class="veh-stat"><span>Combustível</span><span>${v.combustivel||'—'}</span></div>
+      <div class="veh-stat"><span>Autonomia (tanque)</span><span>${autonomia?autonomia+' km':'—'}</span></div>
+      <div class="veh-stat"><span>Km/L médio real</span><span style="color:${stats?'var(--green)':'var(--text3)'}">${stats?stats.mediaKml.toFixed(2)+' km/l':'—'}</span></div>
+      <div class="veh-stat"><span>Custo médio/km</span><span style="color:var(--yellow)">${stats?fmtMoney(stats.mediaCustoKm)+'/km':'—'}</span></div>
+      <div class="veh-stat"><span>Responsável</span><span>${drv?drv.nome:'Sem responsável'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  RESUMO VEÍCULO (melhoria #5)
+// ══════════════════════════════════════════
+function openVehResumo(){
+  const id=document.getElementById('dash-resumo-veh').value;
+  if(!id){toast('Selecione um veículo!','err');return;}
+  openVehResumoById(id);
+}
+
+function openVehResumoById(vehId){
+  const veh=DB.get('vehicles').find(v=>v.id===vehId);
+  if(!veh) return;
+  const drivers=DB.get('drivers');
+  const drv=drivers.find(d=>d.id===veh.motorista);
+  const stats=calcKmlForVehicle(vehId);
+  const fuels=DB.get('fuels').filter(f=>f.vehId===vehId);
+  const maints=DB.get('maintenances').filter(m=>m.vehId===vehId);
+  const pneus=DB.get('pneus').filter(p=>p.vehId===vehId);
+  const checklists=DB.get('checklists').filter(c=>c.vehId===vehId);
+  const ocorrencias=DB.get('ocorrencias').filter(o=>o.vehId===vehId);
+
+  const totalCombust=fuels.reduce((s,f)=>s+Number(f.total||f.totalNota||0),0);
+  const totalMaint=maints.reduce((s,m)=>s+Number(m.custo||0),0);
+  const autonomia=veh.consumo&&veh.tanque?Math.round(parseFloat(veh.consumo)*parseFloat(veh.tanque)):null;
+
+  // Últimos motoristas que usaram o veículo
+  const allLogs=[...fuels,...DB.get('kms').filter(k=>k.vehId===vehId)]
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const driverSet=new Set();
+  allLogs.forEach(l=>{if(l.drvId) driverSet.add(l.drvId);});
+  const driverNames=[...driverSet].map(id=>drivers.find(d=>d.id===id)?.nome||id).filter(Boolean);
+
+  // Pneus mais recentes por posição
+  const posicoes=veh.tipo==='moto'?PNEU_POS_MOTO:PNEU_POS_CARRO;
+  const pneuHtml=posicoes.map(pos=>{
+    const hist=pneus.filter(p=>p.posId===pos.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    const p=hist[0];
+    return `<div class="veh-resumo-stat">
+      <span>🔧 ${pos.label}</span>
+      <span>${p?`${p.marca||'—'} ${p.modelo||''} · Inst.: ${p.dataInst?fmtDate(p.dataInst):'—'} · ${p.banda?p.banda+'mm':'—'}mm`:'Sem dados'}</span>
+    </div>`;
+  }).join('');
+
+  // Custo total
+  const custoTotal=totalCombust+totalMaint;
+
+  if(!document.getElementById('veh-resumo-title'))return;
+  document.getElementById('veh-resumo-title').textContent=`${veh.tipo==='moto'?'🏍':'🚗'} ${veh.modelo} — ${veh.placa}`;
+  document.getElementById('veh-resumo-content').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Identificação</div>
+        <div class="veh-resumo-stat"><span>Modelo</span><span>${veh.modelo}</span></div>
+        <div class="veh-resumo-stat"><span>Placa</span><span style="font-family:monospace">${veh.placa}</span></div>
+        <div class="veh-resumo-stat"><span>Tipo</span><span>${veh.tipo==='moto'?'🏍 Moto':'🚗 Carro'}</span></div>
+        <div class="veh-resumo-stat"><span>Ano</span><span>${veh.ano||'—'}</span></div>
+        <div class="veh-resumo-stat"><span>Cor</span><span>${veh.cor||'—'}</span></div>
+        <div class="veh-resumo-stat"><span>Combustível</span><span>${veh.combustivel||'—'}</span></div>
+        <div class="veh-resumo-stat"><span>KM atual</span><span>${Number(veh.km||0).toLocaleString('pt-BR')} km</span></div>
+        <div class="veh-resumo-stat"><span>Responsável atual</span><span>${drv?drv.nome:'Sem responsável'}</span></div>
+        <div class="veh-resumo-stat" style="border:none"><span>Motoristas que usaram</span><span style="max-width:180px;text-align:right">${driverNames.length?driverNames.join(', '):'—'}</span></div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Desempenho</div>
+        <div class="veh-resumo-stat"><span>Consumo esperado</span><span>${veh.consumo?veh.consumo+' km/l':'—'}</span></div>
+        <div class="veh-resumo-stat"><span>Km/L médio real</span><span style="color:${stats?'var(--green)':'var(--text3)'}">${stats?stats.mediaKml.toFixed(2)+' km/l':'Sem dados'}</span></div>
+        <div class="veh-resumo-stat"><span>Último Km/L</span><span>${stats?stats.ultimoKml.toFixed(2)+' km/l':'—'}</span></div>
+        <div class="veh-resumo-stat"><span>Custo médio/km</span><span style="color:var(--yellow)">${stats?fmtMoney(stats.mediaCustoKm)+'/km':'—'}</span></div>
+        <div class="veh-resumo-stat"><span>Último custo/km</span><span>${stats?fmtMoney(stats.ultimoCustoKm)+'/km':'—'}</span></div>
+        <div class="veh-resumo-stat"><span>Autonomia (tanque cheio)</span><span>${autonomia?autonomia+' km':'—'}</span></div>
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin:14px 0 10px">Custos acumulados</div>
+        <div class="veh-resumo-stat"><span>Total em combustível</span><span style="color:var(--orange)">${fmtMoney(totalCombust)}</span></div>
+        <div class="veh-resumo-stat"><span>Total em manutenção</span><span style="color:var(--red)">${fmtMoney(totalMaint)}</span></div>
+        <div class="veh-resumo-stat" style="border:none"><span>Custo total acumulado</span><span style="color:var(--accent);font-size:15px">${fmtMoney(custoTotal)}</span></div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Estatísticas operacionais</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+      ${[
+        {label:'Abastecimentos',val:fuels.length,color:'var(--accent)'},
+        {label:'Manutenções',val:maints.length,color:'var(--orange)'},
+        {label:'Checklists',val:checklists.length,color:'var(--green)'},
+        {label:'Ocorrências',val:ocorrencias.length,color:'var(--red)'}
+      ].map(s=>`<div style="background:var(--bg3);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:24px;font-weight:800;color:${s.color}">${s.val}</div>
+        <div style="font-size:11px;color:var(--text3)">${s.label}</div>
+      </div>`).join('')}
+    </div>
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin-bottom:10px">Estado dos pneus</div>
+    ${pneuHtml}
+    ${fuels.length?`
+    <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text3);margin:14px 0 10px">Último abastecimento</div>
+    <div class="veh-resumo-stat"><span>Data</span><span>${fmtDateTime(fuels.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))[0].createdAt)}</span></div>
+    <div class="veh-resumo-stat"><span>Litros</span><span>${parseFloat(fuels[0].litros).toFixed(1)} L</span></div>
+    <div class="veh-resumo-stat" style="border:none"><span>Posto</span><span>${fuels[0].posto||'—'}</span></div>`:''}`;
+  openModal('modal-veh-resumo');
+}
+
+// ══════════════════════════════════════════
+//  DRIVERS
+// ══════════════════════════════════════════
+let editDrvId=null;
+function openModalDriver(id){
+  editDrvId=id||null;
+  const drvs=DB.get('drivers');
+  const d=id?drvs.find(x=>x.id===id):null;
+  document.getElementById('modal-driver-title').textContent=id?'Editar motorista':'Novo motorista';
+  ['nome','cpf','cnh','validade','tel','email','pin'].forEach(f=>{
+    const el=document.getElementById('drv-'+f);
+    if(el) el.value=d?d[f]||'':'';
+  });
+  document.getElementById('drv-cat').value=d?d.cat||'B':'B';
+  populateVehicleSelect('drv-veiculo-designado',d?.veiculoDesignado||'');
+  (function(){
+  var sel=document.getElementById('drv-veh');
+  if(!sel){ return; }
+  fetch(window.location.origin+'/api/vehicles')
+    .then(function(r){ return r.json(); })
+    .then(function(vehs){
+      vehs = vehs || [];
+      var selectedVeh=document.getElementById('drv-veiculo-designado').value;
+      sel.innerHTML='<option value="">Nenhum</option>'+vehs.map(function(v){
+        return '<option value="'+v.id+'"'+(v.id===selectedVeh?' selected':'')+'>'+v.modelo+' - '+v.placa+'</option>';
+      }).join('');
+      openModal('modal-driver');
+    });
+})();
+}
+
+async function saveDriver(){
+  const nome=document.getElementById('drv-nome').value.trim();
+  const cnh=document.getElementById('drv-cnh').value.trim();
+  const validade=document.getElementById('drv-validade').value;
+  const pin=document.getElementById('drv-pin').value.trim();
+  if(!nome||!cnh||!validade){toast('Nome, CNH e validade são obrigatórios!','err');return;}
+  if(pin&&pin.length!==4){toast('PIN deve ter exatamente 4 dígitos!','err');return;}
+  // Verificar PIN duplicado
+  const existing=DB.get('drivers').filter(d=>d.id!==editDrvId);
+  if(pin&&existing.some(d=>d.pin===pin)){toast('Este PIN já está em uso por outro motorista!','err');return;}
+  const drvs=DB.get('drivers');
+  const obj={
+    id:editDrvId||DB.uid(),
+    nome,cpf:document.getElementById('drv-cpf').value,
+    cnh,cat:document.getElementById('drv-cat').value,
+    validade,tel:document.getElementById('drv-tel').value,
+    email:document.getElementById('drv-email').value,
+    pin,
+    veiculoDesignado:document.getElementById('drv-veiculo-designado').value,
+    updatedAt:new Date().toISOString()
+  };
+  if(!obj.createdAt) obj.createdAt=new Date().toISOString();
+  if(editDrvId){await api.put('drivers',editDrvId,obj);}
+  else{await api.post('drivers',obj);}
+  await reload('drivers');
+  closeModal('modal-driver');
+  addLog('Motorista', editDrvId ? `Editou motorista ${obj.nome}` : `Cadastrou motorista ${obj.nome}`);
+  toast(editDrvId?'Motorista atualizado!':'Motorista cadastrado!');
+  refreshAll();
+}
+
+async function deleteDriver(id){
+  if(!confirm('Excluir motorista?')) return;
+  await api.del('drivers',id);
+  await reload('drivers');
+  addLog('Motorista', `Excluiu motorista ID ${id}`);
+  toast('Motorista removido');refreshAll();
+}
+
+function populateDriverSelect(selId, selectedVal=''){
+  const sel=document.getElementById(selId);
+  if(!sel) return;
+  const drvs=DB.get('drivers');
+  sel.innerHTML='<option value="">Sem responsável fixo</option>'+drvs.map(d=>`<option value="${d.id}" ${d.id===selectedVal?'selected':''}>${d.nome}</option>`).join('');
+}
+
+function populateVehicleSelect(selId, selectedVal=''){
+  const sel=document.getElementById(selId);
+  if(!sel) return;
+  const vehs=DB.get('vehicles');
+  sel.innerHTML='<option value="">Sem veículo fixo</option>'+vehs.map(v=>`<option value="${v.id}" ${v.id===selectedVal?'selected':''}>${v.modelo} — ${v.placa}</option>`).join('');
+}
+
+function renderCNH(){
+  const drvs=DB.get('drivers');
+  const vehs=DB.get('vehicles');
+  const cfg=DB.getObj('config');
+  const diasAlerta=parseInt(cfg.cnhDias)||30;
+  const tbody=document.getElementById('cnh-table');
+  const alertsEl=document.getElementById('cnh-alerts');
+  let alertCount=0, alertsHtml='';
+
+  tbody.innerHTML=drvs.map(d=>{
+    const days=Math.round((new Date(d.validade+' 00:00:00')-new Date().setHours(0,0,0,0))/86400000);
+    let statusBadge,cls='';
+    if(days<0){statusBadge='<span class="badge badge-danger">VENCIDA</span>';alertCount++;alertsHtml+=`<div class="alert-box danger"><i class="fa fa-triangle-exclamation"></i> CNH de <strong>${d.nome}</strong> está vencida há ${Math.abs(days)} dias!</div>`;}
+    else if(days<=diasAlerta){statusBadge=`<span class="badge badge-warn">Vence em ${days}d</span>`;alertCount++;alertsHtml+=`<div class="alert-box warn"><i class="fa fa-circle-exclamation"></i> CNH de <strong>${d.nome}</strong> vence em ${days} dias (${fmtDate(d.validade)})</div>`;}
+    else{statusBadge='<span class="badge badge-ok">Regular</span>';}
+    const vehDesig=vehs.find(v=>v.id===d.veiculoDesignado);
+    return `<tr>
+      <td><strong>${d.nome}</strong></td>
+      <td>${d.cpf||'—'}</td>
+      <td style="font-family:monospace">${d.cnh}</td>
+      <td><span class="badge badge-info">${d.cat}</span></td>
+      <td>${fmtDate(d.validade)}</td>
+      <td style="font-weight:700;color:${days<0?'var(--red)':days<=diasAlerta?'var(--yellow)':'var(--green)'}">${days<0?Math.abs(days)+' (vencida)':days+'d'}</td>
+      <td>${d.tel||'—'}</td>
+      <td>${statusBadge}</td>
+      <td>${vehDesig?`<span class="badge badge-gray">${vehDesig.placa}</span>`:'—'}</td>
+      <td><span style="font-size:16px;font-weight:800;letter-spacing:0.2em;color:var(--accent)">${d.pin||'—'}</span></td>
+      <td class="td-actions">
+        <button class="action-btn" onclick="openModalDriver('${d.id}')"><i class="fa fa-pen"></i></button>
+        <button class="action-btn del" onclick="deleteDriver('${d.id}')"><i class="fa fa-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  alertsEl.innerHTML=alertsHtml;
+  const badge=document.getElementById('badge-cnh');
+  badge.textContent=alertCount; badge.style.display=alertCount?'':'none';
+  document.getElementById('bell-dot').style.display=alertCount?'':'none';
+}
+
+// ══════════════════════════════════════════
+//  FUEL — VALOR DA NOTA (sem preço/litro manual)
+// ══════════════════════════════════════════
+
+function populateVehiclesForModal(selId) {
+  var sel = document.getElementById(selId);
+  if (!sel) return;
+  var vehs = (_cache['vehicles'] && _cache['vehicles'].length) ? _cache['vehicles'] : DB.get('vehicles');
+  sel.innerHTML = '<option value="">Selecione...</option>' + vehs.map(function(v){
+    return '<option value="'+v.id+'">'+v.modelo+' - '+v.placa+'</option>';
+  }).join('');
+}
+function populateAllDriversSelect(selId) {
+  var sel = document.getElementById(selId);
+  if (!sel) return;
+  var drvs = (_cache['drivers'] && _cache['drivers'].length) ? _cache['drivers'] : DB.get('drivers');
+  sel.innerHTML = '<option value="">Selecione...</option>' + drvs.map(function(d){
+    return '<option value="'+d.id+'">'+d.nome+'</option>';
+  }).join('');
+}
+function populateFuelPostoSelect() {
+  var sel = document.getElementById('fuel-posto-select');
+  if (!sel) return;
+  var postos = DB.get('postos');
+  sel.innerHTML = '<option value="">Selecione um posto</option>' + postos.map(function(p){
+    return '<option value="'+p.id+'">'+p.nome+(p.bandeira?' · '+p.bandeira:'')+'</option>';
+  }).join('');
+}
+function populateVehMaintSelect() {
+  populateVehiclesForModal('maint-veh');
+  populateAllDriversSelect('maint-drv');
+}
+
+function openFuelModal(){
+  populateVehiclesForModal('fuel-veh');
+  populateAllDriversSelect('fuel-motorista');
+  populateFuelPostoSelect();
+  document.getElementById('fuel-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('fuel-modal-calc').style.display='none';
+  openModal('modal-fuel');
+}
+
+function calcFuelModal(){
+  const litros=parseFloat(document.getElementById('fuel-litros').value)||0;
+  const total=parseFloat(document.getElementById('fuel-total-nota').value)||0;
+  const el=document.getElementById('fuel-modal-calc');
+  if(litros>0&&total>0){
+    el.style.display='block';
+    document.getElementById('fuel-modal-preco').textContent=fmtMoney(total/litros)+'/l';
+    // Custo/km será calculado depois com base no KM anterior
+    const vehId=document.getElementById('fuel-veh').value;
+    const kmAtual=parseFloat(document.getElementById('fuel-km').value)||0;
+    const fuels=DB.get('fuels').filter(f=>f.vehId===vehId&&f.km).sort((a,b)=>Number(b.km)-Number(a.km));
+    const kmAnterior=fuels.length>0?Number(fuels[0].km):0;
+    if(kmAtual>0&&kmAnterior>0&&kmAtual>kmAnterior){
+      document.getElementById('fuel-modal-custkm').textContent=fmtMoney(total/(kmAtual-kmAnterior))+'/km';
+    } else {
+      document.getElementById('fuel-modal-custkm').textContent='Informe o KM';
+    }
+  } else {
+    el.style.display='none';
+  }
+}
+
+async function saveFuel(){
+  const vehId=document.getElementById('fuel-veh').value;
+  const km=document.getElementById('fuel-km').value;
+  const litros=document.getElementById('fuel-litros').value;
+  const totalNota=document.getElementById('fuel-total-nota').value;
+  const postoId=document.getElementById('fuel-posto-select').value;
+  if(!vehId||!km||!litros||!totalNota){toast('Veículo, KM, litros e valor da nota são obrigatórios!','err');return;}
+  const postos=DB.get('postos');
+  const posto=postos.find(p=>p.id===postoId);
+  const precoLitro=parseFloat(totalNota)/parseFloat(litros);
+  const obj={
+    id:DB.uid(),vehId,
+    drvId:document.getElementById('fuel-motorista').value,
+    data:document.getElementById('fuel-data').value,
+    km:Number(km),litros:Number(litros),
+    total:Number(totalNota), totalNota:Number(totalNota),
+    precoLitro,
+    tipo:document.getElementById('fuel-tipo').value,
+    posto:posto?posto.nome:'Não informado',
+    postoId,
+    createdAt:new Date().toISOString()
+  };
+  // Atualiza KM do veículo
+  const vehObj=DB.get('vehicles').find(v=>v.id===vehId);
+  if(vehObj&&Number(km)>Number(vehObj.km||0)){await api.put('vehicles',vehId,{...vehObj,km:Number(km)});}
+  await api.post('fuels',obj);
+  await Promise.all([reload('fuels'),reload('vehicles')]);
+  closeModal('modal-fuel');
+  addLog('Abastecimento', `Registrou abastecimento — ${obj.litros}L — ${obj.posto||''}`);
+  toast('Abastecimento registrado!');refreshAll();
+}
+
+async function deleteFuel(id){
+  await api.del('fuels',id);
+  await reload('fuels');
+  addLog('Abastecimento', `Excluiu registro de abastecimento`);
+  toast('Registro removido');refreshAll();
+}
+
+function renderFuelTable(){
+  const fuels=DB.get('fuels').sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+  const tbody=document.getElementById('fuel-table');
+
+  // Calcular kml e custo/km por veículo
+  const kmlMaps={};
+  vehs.forEach(v=>{kmlMaps[v.id]=buildKmlMap(v.id);});
+
+  let totalLit=0,totalVal=0;
+  fuels.forEach(f=>{totalLit+=Number(f.litros||0);totalVal+=Number(f.total||f.totalNota||0);});
+
+  const metricsEl=document.getElementById('fuel-metrics');
+  const precoMed=totalLit?totalVal/totalLit:0;
+  metricsEl.innerHTML=[
+    {label:'Total abastecido',val:totalLit.toFixed(0)+' L',cls:'blue',icon:'fa-gas-pump'},
+    {label:'Gasto total',val:fmtMoney(totalVal),cls:'orange',icon:'fa-money-bill'},
+    {label:'R$/L médio',val:fmtMoney(precoMed),cls:'yellow',icon:'fa-tag'},
+    {label:'Registros',val:fuels.length,cls:'green',icon:'fa-list'}
+  ].map(m=>`<div class="metric-card ${m.cls}"><div class="metric-icon"><i class="fa ${m.icon}"></i></div><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div></div>`).join('');
+
+  tbody.innerHTML=fuels.map(f=>{
+    const veh=vehs.find(v=>v.id===f.vehId);
+    const drv=drvs.find(d=>d.id===f.drvId);
+    const kmlData=kmlMaps[f.vehId]?.[f.id];
+    const kmlStr=kmlData?kmlData.kml.toFixed(2):'—';
+    const custoKmStr=kmlData?fmtMoney(kmlData.custoKm)+'/km':'—';
+    const precoLitro=f.precoLitro||(f.total&&f.litros?f.total/f.litros:0);
+    return `<tr>
+      <td>${fmtDate(f.data)}</td>
+      <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+      <td><span style="font-size:12px;color:var(--text2)">${drv?drv.nome:'—'}</span></td>
+      <td>${f.tipo||'—'}</td>
+      <td>${parseFloat(f.litros||0).toFixed(1)} L</td>
+      <td>${fmtMoney(precoLitro)}</td>
+      <td style="font-weight:700;color:var(--orange)">${fmtMoney(f.total||f.totalNota||0)}</td>
+      <td>${Number(f.km||0).toLocaleString('pt-BR')} km</td>
+      <td style="color:${kmlData?'var(--green)':'var(--text3)'};font-weight:${kmlData?700:400}">${kmlStr}</td>
+      <td style="color:var(--yellow)">${custoKmStr}</td>
+      <td>${f.posto||'—'}</td>
+      <td>${f.notaFoto?`<button class="action-btn" onclick="verNotaFoto('${f.id}')" title="Ver nota fiscal"><i class="fa fa-receipt"></i></button>`:'—'}</td>
+      <td><button class="action-btn del" onclick="deleteFuel('${f.id}')"><i class="fa fa-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+
+  if(!fuels.length) tbody.innerHTML='<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:30px">Nenhum abastecimento registrado</td></tr>';
+}
+
+function verNotaFoto(fuelId){
+  const fuel=DB.get('fuels').find(f=>f.id===fuelId);
+  if(!fuel?.notaFoto) return;
+  const w=window.open('','_blank');
+  w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${fuel.notaFoto}" style="max-width:100%;max-height:100vh"><div id="toast-container"></div>
+<input type="hidden" id="mnt-motorista">
+<input type="hidden" id="mnt-obs">
+<input type="hidden" id="veh-motorista">
+<input type="hidden" id="veh-renavam">
+<input type="hidden" id="mnt-proxkm">
+<input type="hidden" id="fuel-motorista">
+<input type="hidden" id="mnt-garantia">
+<input type="hidden" id="fuel-total-nota">
+<input type="hidden" id="tire-motorista">
+<input type="hidden" id="drv-veiculo-designado">
+</body></html>`);
+}
+
+function renderFuelReport(){
+  const mesInput=document.getElementById('fuel-rel-mes');
+  const mes=mesInput.value||new Date().toISOString().slice(0,7);
+  if(!mesInput.value) mesInput.value=mes;
+  const [year,month]=mes.split('-').map(Number);
+  const fuels=DB.get('fuels').filter(f=>{const d=new Date(f.data);return d.getFullYear()===year&&d.getMonth()+1===month;});
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+
+  const totalLit=fuels.reduce((s,f)=>s+Number(f.litros||0),0);
+  const totalVal=fuels.reduce((s,f)=>s+Number(f.total||f.totalNota||0),0);
+  document.getElementById('fuel-rel-metrics').innerHTML=[
+    {label:'Abastecimentos',val:fuels.length,cls:'blue'},{label:'Litros',val:totalLit.toFixed(1)+' L',cls:'green'},
+    {label:'Gasto total',val:fmtMoney(totalVal),cls:'yellow'},{label:'R$/L médio',val:totalLit?fmtMoney(totalVal/totalLit):'—',cls:'red'}
+  ].map(m=>`<div class="metric-card ${m.cls}"><div class="metric-label">${m.label}</div><div class="metric-value" style="font-size:20px">${m.val}</div></div>`).join('');
+
+  // Resumo por veículo com km/l correto
+  const byVeh={};
+  fuels.forEach(f=>{
+    if(!byVeh[f.vehId]) byVeh[f.vehId]={fuels:[],litros:0,total:0};
+    byVeh[f.vehId].fuels.push(f);
+    byVeh[f.vehId].litros+=Number(f.litros||0);
+    byVeh[f.vehId].total+=Number(f.total||f.totalNota||0);
+  });
+  document.getElementById('fuel-rel-resumo').innerHTML=Object.entries(byVeh).map(([vehId,data])=>{
+    const veh=vehs.find(v=>v.id===vehId);
+    const stats=calcKmlForVehicle(vehId);
+    return `<tr>
+      <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+      <td>${data.fuels.length}</td>
+      <td>${data.litros.toFixed(1)} L</td>
+      <td>${fmtMoney(data.total)}</td>
+      <td>${data.litros?fmtMoney(data.total/data.litros)+'/l':'—'}</td>
+      <td style="color:var(--green)">${stats?stats.mediaKml.toFixed(2)+' km/l':'—'}</td>
+      <td style="color:var(--yellow)">${stats?fmtMoney(stats.mediaCustoKm)+'/km':'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px">Sem abastecimentos neste mês</td></tr>';
+
+  const allKmlMaps={};
+  vehs.forEach(v=>{allKmlMaps[v.id]=buildKmlMap(v.id);});
+  document.getElementById('fuel-rel-detalhe').innerHTML=fuels.sort((a,b)=>new Date(a.data)-new Date(b.data)).map(f=>{
+    const veh=vehs.find(v=>v.id===f.vehId);
+    const drv=drvs.find(d=>d.id===f.drvId);
+    const kmlData=allKmlMaps[f.vehId]?.[f.id];
+    const precoLitro=f.precoLitro||(f.total&&f.litros?f.total/f.litros:0);
+    return `<tr>
+      <td>${fmtDate(f.data)}</td>
+      <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+      <td>${drv?drv.nome:'—'}</td>
+      <td>${f.tipo||'—'}</td>
+      <td>${parseFloat(f.litros||0).toFixed(1)} L</td>
+      <td>${fmtMoney(precoLitro)}</td>
+      <td>${fmtMoney(f.total||f.totalNota||0)}</td>
+      <td>${Number(f.km||0).toLocaleString('pt-BR')} km</td>
+      <td style="color:var(--green)">${kmlData?kmlData.kml.toFixed(2):'—'}</td>
+      <td style="color:var(--yellow)">${kmlData?fmtMoney(kmlData.custoKm)+'/km':'—'}</td>
+      <td>${f.posto||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">Sem dados</td></tr>';
+}
+
+function exportFuelReportCSV(){
+  const mesInput=document.getElementById('fuel-rel-mes');
+  const mes=mesInput.value||new Date().toISOString().slice(0,7);
+  const [year,month]=mes.split('-').map(Number);
+  const fuels=DB.get('fuels').filter(f=>{const d=new Date(f.data);return d.getFullYear()===year&&d.getMonth()+1===month;});
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+  const allKmlMaps={};vehs.forEach(v=>{allKmlMaps[v.id]=buildKmlMap(v.id);});
+  const rows=[['Data','Veiculo','Placa','Motorista','Combustivel','Litros','R$/L','Total','KM','Km/L','Custo/km','Posto']];
+  fuels.forEach(f=>{
+    const veh=vehs.find(v=>v.id===f.vehId);
+    const drv=drvs.find(d=>d.id===f.drvId);
+    const kmlData=allKmlMaps[f.vehId]?.[f.id];
+    const precoLitro=f.precoLitro||(f.total&&f.litros?f.total/f.litros:0);
+    rows.push([f.data,veh?.modelo||'',veh?.placa||'',drv?.nome||'',f.tipo||'',
+      parseFloat(f.litros||0).toFixed(2),precoLitro.toFixed(2),
+      Number(f.total||f.totalNota||0).toFixed(2),f.km||'',
+      kmlData?kmlData.kml.toFixed(2):'',kmlData?kmlData.custoKm.toFixed(4):'',f.posto||'']);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`combustivel_${mes}.csv`;a.click();
+}
+
+// ══════════════════════════════════════════
+//  MAINTENANCE
+// ══════════════════════════════════════════
+let editMaintId=null;
+async function saveMaint(){
+  const vehId=document.getElementById('mnt-veh').value;
+  const servico=document.getElementById('mnt-servico').value;
+  if(!vehId||!servico){toast('Veículo e serviço são obrigatórios!','err');return;}
+  const obj={
+    id:editMaintId||DB.uid(),vehId,
+    drvId:document.getElementById('mnt-motorista').value,
+    tipo:document.getElementById('mnt-tipo').value,
+    servico,data:document.getElementById('mnt-data').value,
+    km:Number(document.getElementById('mnt-km').value)||0,
+    custo:Number(document.getElementById('mnt-custo').value)||0,
+    fornecedor:document.getElementById('mnt-fornecedor').value,
+    nf:document.getElementById('mnt-nf').value,
+    garantia:document.getElementById('mnt-garantia').value,
+    proxKm:Number(document.getElementById('mnt-proxkm').value)||0,
+    obs:document.getElementById('mnt-obs').value,
+    createdAt:new Date().toISOString()
+  };
+  if(editMaintId){await api.put('maintenances',editMaintId,obj);}
+  else{await api.post('maintenances',obj);}
+  await reload('maintenances');
+  editMaintId=null;
+  addLog('Manutenção', `${editMaintId?'Editou':'Registrou'} manutenção: ${obj.servico}`);
+  closeModal('modal-maint');toast('Manutenção salva!');refreshAll();
+}
+
+async function deleteMaint(id){
+  await api.del('maintenances',id); await reload('maintenances');toast('Removido');refreshAll();
+}
+
+function renderMaint(){
+  const maints=DB.get('maintenances').sort((a,b)=>new Date(b.data)-new Date(a.data));
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+  const cfg=DB.getObj('config');
+  const alertKm=parseInt(cfg.mntKm)||1000;
+  let alertCount=0;
+
+  function row(m){
+    const veh=vehs.find(v=>v.id===m.vehId);
+    const drv=drvs.find(d=>d.id===m.drvId);
+    const kmRestante=m.proxKm&&veh?m.proxKm-Number(veh.km||0):null;
+    let statusBadge='<span class="badge badge-ok">OK</span>';
+    if(kmRestante!==null){if(kmRestante<=0){statusBadge='<span class="badge badge-danger">Vencida</span>';alertCount++;}else if(kmRestante<=alertKm){statusBadge=`<span class="badge badge-warn">Em ${kmRestante.toLocaleString()} km</span>`;alertCount++;}}
+    return{veh,drv,kmRestante,statusBadge,m};
+  }
+
+  const all=maints.map(row);
+  const tbody1=document.getElementById('maint-table-todas');
+  tbody1.innerHTML=all.map(({veh,drv,statusBadge,m})=>`<tr>
+    <td>${fmtDate(m.data)}</td>
+    <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+    <td><span style="font-size:11px;color:var(--text2)">${drv?drv.nome:'—'}</span></td>
+    <td><span class="badge ${m.tipo==='preventiva'?'badge-info':'badge-warn'}">${m.tipo}</span></td>
+    <td>${m.servico}</td>
+    <td>${Number(m.km||0).toLocaleString('pt-BR')} km</td>
+    <td>${fmtMoney(m.custo)}</td>
+    <td>${m.fornecedor||'—'}</td>
+    <td>${statusBadge}</td>
+    <td class="td-actions">
+      <button class="action-btn del" onclick="deleteMaint('${m.id}')"><i class="fa fa-trash"></i></button>
+    </td>
+  </tr>`).join('')||'<tr><td colspan="10" style="text-align:center;color:var(--text3);padding:30px">Nenhuma manutenção</td></tr>';
+
+  const prev=all.filter(x=>x.m.tipo==='preventiva');
+  document.getElementById('maint-table-prev').innerHTML=prev.map(({veh,drv,kmRestante,m})=>`<tr>
+    <td>${fmtDate(m.data)}</td><td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+    <td>${drv?drv.nome:'—'}</td>
+    <td>${m.servico}</td><td>${Number(m.km||0).toLocaleString('pt-BR')} km</td>
+    <td>${fmtMoney(m.custo)}</td>
+    <td>${m.proxKm?Number(m.proxKm).toLocaleString('pt-BR')+' km':'—'}</td>
+    <td class="td-actions"><button class="action-btn del" onclick="deleteMaint('${m.id}')"><i class="fa fa-trash"></i></button></td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text3)">Nenhuma</td></tr>';
+
+  const corr=all.filter(x=>x.m.tipo==='corretiva');
+  document.getElementById('maint-table-corr').innerHTML=corr.map(({veh,drv,m})=>`<tr>
+    <td>${fmtDate(m.data)}</td><td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+    <td>${drv?drv.nome:'—'}</td>
+    <td>${m.servico}</td><td>${fmtMoney(m.custo)}</td>
+    <td>${m.fornecedor||'—'}</td><td>${m.nf||'—'}</td>
+    <td class="td-actions"><button class="action-btn del" onclick="deleteMaint('${m.id}')"><i class="fa fa-trash"></i></button></td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--text3)">Nenhuma</td></tr>';
+
+  const venc=all.filter(x=>x.kmRestante!==null&&x.kmRestante<=alertKm);
+  document.getElementById('maint-alerts-list').innerHTML=venc.map(({veh,m,kmRestante})=>`
+    <div class="alert-box ${kmRestante<=0?'danger':'warn'}">
+      <i class="fa ${kmRestante<=0?'fa-triangle-exclamation':'fa-circle-exclamation'}"></i>
+      <strong>${veh?veh.modelo+' ('+veh.placa+')':''}</strong> — ${m.servico}:
+      ${kmRestante<=0?'revisão VENCIDA há '+Math.abs(kmRestante).toLocaleString()+' km':`faltam ${kmRestante.toLocaleString()} km`}
+    </div>`).join('')||'<div class="alert-box ok"><i class="fa fa-circle-check"></i> Nenhuma manutenção vencida ou próxima do limite</div>';
+
+  const badge=document.getElementById('badge-mnt');
+  badge.textContent=alertCount;badge.style.display=alertCount?'':'none';
+}
+
+// ══════════════════════════════════════════
+//  PNEUS (melhoria #7 gestor)
+// ══════════════════════════════════════════
+let tirePosAtiva=null;
+let tirePosData={};
+
+
+function abrirModalDriver(editId) {
+  ['drv-nome','drv-cpf','drv-cnh','drv-tel','drv-pin','drv-email'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
+  });
+  document.getElementById('drv-validade') && (document.getElementById('drv-validade').value = '');
+  document.getElementById('drv-cat') && (document.getElementById('drv-cat').value = 'B');
+  document.getElementById('drv-veiculo-designado').value = '';
+
+  var sel = document.getElementById('drv-veh');
+
+  Promise.all([
+    fetch(window.location.origin+'/api/vehicles').then(function(r){return r.json();}),
+    fetch(window.location.origin+'/api/drivers').then(function(r){return r.json();})
+  ]).then(function(results){
+    var vehs = results[0] || [];
+    var drvs = results[1] || [];
+    var dEdit = editId ? drvs.find(function(d){return d.id===editId;}) : null;
+    var selectedVeh = (dEdit && dEdit.veiculoDesignado) || '';
+
+    document.getElementById('drv-veiculo-designado').value = selectedVeh;
+    if(sel) sel.innerHTML = '<option value="">Nenhum</option>' + vehs.map(function(v){
+      return '<option value="'+v.id+'"'+(v.id===selectedVeh?' selected':'')+'>'+v.modelo+' - '+v.placa+'</option>';
+    }).join('');
+
+    if(dEdit){
+      ['nome','cpf','cnh','tel','pin','email'].forEach(function(f){
+        var el=document.getElementById('drv-'+f); if(el&&dEdit[f])el.value=dEdit[f];
+      });
+      document.getElementById('drv-validade') && dEdit.validade && (document.getElementById('drv-validade').value=dEdit.validade);
+      document.getElementById('drv-cat') && dEdit.cat && (document.getElementById('drv-cat').value=dEdit.cat);
+    }
+
+    document.getElementById('modal-driver-title').textContent = editId ? 'Editar motorista' : 'Novo motorista';
+    openModal('modal-driver');
+  });
+}
+
+
+async function savePneu(){
+  const vehId=document.getElementById('pneu-veh').value;
+  const posId=document.getElementById('pneu-posicao').value;
+  const marca=document.getElementById('pneu-marca').value.trim();
+  if(!vehId){toast('Selecione o veículo!','err');return;}
+  if(!posId){toast('Selecione a posição!','err');return;}
+  if(!marca){toast('Informe a marca do pneu!','err');return;}
+  const obj={
+    id:DB.uid(),vehId,posId,
+    posLabel:posId,
+    marca,
+    modelo:document.getElementById('pneu-modelo').value.trim(),
+    dataInst:document.getElementById('pneu-data').value,
+    kmInst:Number(document.getElementById('pneu-km-inst').value)||0,
+    local:document.getElementById('pneu-local')?document.getElementById('pneu-local').value:'',
+    valor:Number(document.getElementById('pneu-valor')?document.getElementById('pneu-valor').value:0)||0,
+    situacao:'ok',
+    createdAt:new Date().toISOString()
+  };
+  await api.post('tires',obj);
+  await reload('tires');
+  closeModal('modal-pneu');
+  toast('Pneu registrado!');
+  renderPneuHistoryTable();
+  renderPneuDiagramaGestor();
+}
+
+function openModalPneu(vehId){
+  var sel = document.getElementById('pneu-veh');
+  if(sel){
+    var vehs = DB.get('vehicles');
+    sel.innerHTML = '<option value="">Selecione...</option>' + vehs.map(function(v){
+      return '<option value="'+v.id+'"'+(v.id===vehId?' selected':'')+'>'+v.modelo+' - '+v.placa+'</option>';
+    }).join('');
+  }
+  openModal('modal-pneu');
+}
+function openTireModal(){
+  tirePosAtiva=null; tirePosData={};
+  populateVehiclesForModal('tire-veh');
+  populateAllDriversSelect('tire-motorista');
+  document.getElementById('tire-data').value=new Date().toISOString().slice(0,10);
+  document.getElementById('tire-edit-panel').style.display='none';
+  renderTireModalDiagram();
+  openModal('modal-tire');
+}
+
+function renderTireModalDiagram(){
+  const vehId=document.getElementById('tire-veh').value;
+  const veh=DB.get('vehicles').find(v=>v.id===vehId);
+  const isMoto=veh?.tipo==='moto';
+  const posicoes=isMoto?PNEU_POS_MOTO:PNEU_POS_CARRO;
+  const pneus=DB.get('pneus').filter(p=>p.vehId===vehId);
+  const wrap=document.getElementById('tire-modal-diagram');
+  if(!wrap) return;
+
+  const svgH=isMoto?320:300;
+  let svgContent='';
+
+  if(!isMoto){
+    svgContent+=`
+      <rect x="80" y="40" width="100" height="220" rx="20" fill="#1a2030" stroke="#1e2d45" stroke-width="2"/>
+      <rect x="85" y="55" width="90" height="40" rx="5" fill="#212840" stroke="#2E86C1" stroke-width="1.5" opacity="0.6"/>
+      <rect x="85" y="190" width="90" height="36" rx="5" fill="#212840" stroke="#2E86C1" stroke-width="1.5" opacity="0.6"/>
+      <text x="130" y="25" text-anchor="middle" fill="#4a6080" font-size="11" font-family="sans-serif">▲ FRENTE</text>`;
+  } else {
+    svgContent+=`
+      <rect x="115" y="30" width="22" height="260" rx="11" fill="#1a2030" stroke="#1e2d45" stroke-width="2"/>
+      <text x="126" y="18" text-anchor="middle" fill="#4a6080" font-size="11" font-family="sans-serif">▲ FRENTE</text>`;
+  }
+
+  posicoes.forEach(pos=>{
+    const hist=pneus.filter(p=>p.posId===pos.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    const p=hist[0];
+    const isAtivo=tirePosAtiva===pos.id;
+    const cor=isAtivo?'#F26522':p?'#22c87a':'#4a6080';
+    if(!isMoto){
+      svgContent+=`<g class="tire-btn" onclick="selectTirePos('${pos.id}','${pos.label}')" style="cursor:pointer">
+        <rect x="${pos.x-16}" y="${pos.y-26}" width="32" height="52" rx="7" fill="${cor}" opacity="${isAtivo?0.5:0.2}" stroke="${cor}" stroke-width="2"/>
+        <rect x="${pos.x-9}" y="${pos.y-18}" width="18" height="36" rx="3" fill="${cor}" opacity="${isAtivo?0.7:0.4}"/>
+        <text x="${pos.x}" y="${pos.y+5}" text-anchor="middle" fill="${cor}" font-size="9" font-weight="bold" font-family="sans-serif">${isAtivo?'✎':p?'✓':'+'}</text>
+      </g>
+      <text x="${pos.x}" y="${pos.y+40}" text-anchor="middle" fill="#8da4c0" font-size="8" font-family="sans-serif">${p?p.marca||'':''}</text>`;
+    } else {
+      svgContent+=`<g class="tire-btn" onclick="selectTirePos('${pos.id}','${pos.label}')" style="cursor:pointer">
+        <ellipse cx="${pos.x}" cy="${pos.y}" rx="26" ry="17" fill="${cor}" opacity="${isAtivo?0.5:0.2}" stroke="${cor}" stroke-width="2"/>
+        <ellipse cx="${pos.x}" cy="${pos.y}" rx="14" ry="9" fill="${cor}" opacity="${isAtivo?0.7:0.4}"/>
+        <text x="${pos.x}" y="${pos.y+4}" text-anchor="middle" fill="${cor}" font-size="9" font-weight="bold" font-family="sans-serif">${isAtivo?'✎':p?'✓':'+'}</text>
+      </g>`;
+    }
+  });
+
+  wrap.innerHTML=`<svg viewBox="0 0 260 ${svgH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:260px;display:block;margin:0 auto">${svgContent}</svg>`;
+}
+
+function selectTirePos(posId, posLabel){
+  tirePosAtiva=posId;
+  const vehId=document.getElementById('tire-veh').value;
+  const pneus=DB.get('pneus').filter(p=>p.vehId===vehId&&p.posId===posId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const p=pneus[0];
+  const panel=document.getElementById('tire-edit-panel');
+  panel.style.display='block';
+  document.getElementById('tire-edit-title').textContent=`Editando: ${posLabel}`;
+  document.getElementById('tire-edit-marca').value=p?.marca||'';
+  document.getElementById('tire-edit-modelo').value=p?.modelo||'';
+  document.getElementById('tire-edit-dataInst').value=p?.dataInst||document.getElementById('tire-data').value;
+  document.getElementById('tire-edit-kmInst').value=p?.kmInst||document.getElementById('tire-km').value||'';
+  document.getElementById('tire-edit-local').value=p?.local||'';
+  document.getElementById('tire-edit-valor').value=p?.valor||'';
+  document.getElementById('tire-edit-prof').value=p?.banda||'';
+  document.getElementById('tire-edit-pressao').value=p?.pressao||'';
+  document.getElementById('tire-edit-obs').value=p?.obs||'';
+  renderTireModalDiagram();
+}
+
+async function saveTirePosition(){
+  // tirePosAtiva pode ser null quando registrado pelo botão direto
+  const marca=document.getElementById('tire-edit-marca').value.trim();
+  if(!marca){toast('Informe a marca do pneu!','err');return;}
+  const vehId=document.getElementById('tire-veh').value;
+  if(!vehId){toast('Selecione o veículo!','err');return;}
+  const obj={
+    id:DB.uid(),vehId,
+    drvId:document.getElementById('tire-motorista').value,
+    posId:tirePosAtiva,
+    posLabel:document.getElementById('tire-edit-title').textContent.replace('Editando: ',''),
+    marca,modelo:document.getElementById('tire-edit-modelo').value,
+    dataInst:document.getElementById('tire-edit-dataInst').value,
+    kmInst:Number(document.getElementById('tire-edit-kmInst').value)||0,
+    local:document.getElementById('tire-edit-local').value,
+    valor:Number(document.getElementById('tire-edit-valor').value)||0,
+    banda:Number(document.getElementById('tire-edit-prof').value)||0,
+    pressao:Number(document.getElementById('tire-edit-pressao').value)||0,
+    obs:document.getElementById('tire-edit-obs').value,
+    createdAt:new Date().toISOString()
+  };
+  await api.post('tires',obj); await reload('tires');
+  toast(`Pneu ${obj.posLabel} salvo! ${marca}`);
+  tirePosAtiva=null;
+  document.getElementById('tire-edit-panel').style.display='none';
+  renderTireModalDiagram();
+  renderPneuHistoryTable();
+}
+
+function renderPneuHistoryTable(){
+  const pneus=DB.get('pneus').sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+  const tbody=document.getElementById('tire-history-table');
+  if(!tbody) return;
+  tbody.innerHTML=pneus.map(p=>{
+    const veh=vehs.find(v=>v.id===p.vehId);
+    const drv=drvs.find(d=>d.id===p.drvId);
+    const dias=p.dataInst?Math.round((Date.now()-new Date(p.dataInst))/86400000):null;
+    const veh2=veh;
+    const kmRodado=veh2&&p.kmInst?Number(veh2.km||0)-Number(p.kmInst):null;
+    let situacao='<span class="badge badge-ok">OK</span>';
+    if(p.banda){if(p.banda<1.6)situacao='<span class="badge badge-danger">Trocar!</span>';else if(p.banda<3)situacao='<span class="badge badge-warn">Atenção</span>';}
+    return `<tr>
+      <td>${fmtDate(p.dataInst||p.createdAt)}</td>
+      <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+      <td><span style="font-size:11px;color:var(--text2)">${drv?drv.nome:'—'}</span></td>
+      <td>${p.posLabel||p.posId}</td>
+      <td><strong>${p.marca||'—'}</strong> ${p.modelo||''}</td>
+      <td>${p.dataInst?fmtDate(p.dataInst)+''+( dias?' ('+dias+'d)':''):'—'}</td>
+      <td>${p.kmInst?Number(p.kmInst).toLocaleString('pt-BR')+' km':'—'}</td>
+      <td>${p.local||'—'}</td>
+      <td>${p.valor?fmtMoney(p.valor):'—'}</td>
+      <td><strong>${p.banda||'—'}</strong></td>
+      <td>${p.pressao?p.pressao+' PSI':'—'}</td>
+      <td>${situacao}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="12" style="text-align:center;color:var(--text3);padding:30px">Nenhum pneu cadastrado</td></tr>';
+}
+
+function renderPneuDiagramaGestor(){
+  const vehId=document.getElementById('pneu-diagrama-veh').value;
+  const area=document.getElementById('pneu-diagrama-area');
+  if(!vehId){area.innerHTML='<div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Selecione um veículo para ver o diagrama</div>';return;}
+  const veh=DB.get('vehicles').find(v=>v.id===vehId);
+  const isMoto=veh?.tipo==='moto';
+  const posicoes=isMoto?PNEU_POS_MOTO:PNEU_POS_CARRO;
+  const pneus=DB.get('pneus').filter(p=>p.vehId===vehId);
+
+  const latestPneu={};
+  posicoes.forEach(pos=>{
+    const hist=pneus.filter(p=>p.posId===pos.id).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+    if(hist.length) latestPneu[pos.id]=hist[0];
+  });
+
+  const svgH=isMoto?340:320;
+  let svgContent='';
+  if(!isMoto){
+    svgContent+=`<rect x="80" y="40" width="100" height="230" rx="20" fill="#1a2030" stroke="#1e2d45" stroke-width="2"/>
+    <rect x="85" y="55" width="90" height="42" rx="5" fill="#212840" stroke="#2E86C1" stroke-width="1.5" opacity="0.6"/>
+    <rect x="85" y="195" width="90" height="38" rx="5" fill="#212840" stroke="#2E86C1" stroke-width="1.5" opacity="0.6"/>
+    <text x="130" y="25" text-anchor="middle" fill="#4a6080" font-size="11" font-family="sans-serif">▲ FRENTE</text>`;
+  } else {
+    svgContent+=`<rect x="115" y="30" width="22" height="270" rx="11" fill="#1a2030" stroke="#1e2d45" stroke-width="2"/>
+    <text x="126" y="18" text-anchor="middle" fill="#4a6080" font-size="11" font-family="sans-serif">▲ FRENTE</text>`;
+  }
+
+  posicoes.forEach(pos=>{
+    const p=latestPneu[pos.id];
+    let cor='#4a6080';
+    if(p){cor=p.banda<1.6?'#f05252':p.banda<3?'#f0b429':'#22c87a';}
+    const posIdSafe=pos.id.replace(/[^a-z0-9_]/gi,'_');
+    if(!isMoto){
+      svgContent+=`<g class="tire-btn" onmouseenter="showDiagTooltip(event,'${pos.id}','${vehId}')" onmouseleave="hideDiagTooltip()" style="cursor:pointer">
+        <rect x="${pos.x-16}" y="${pos.y-26}" width="32" height="52" rx="7" fill="${cor}" opacity="0.25" stroke="${cor}" stroke-width="2"/>
+        <rect x="${pos.x-9}" y="${pos.y-18}" width="18" height="36" rx="3" fill="${cor}" opacity="0.5"/>
+        <text x="${pos.x}" y="${pos.y+4}" text-anchor="middle" fill="${cor}" font-size="9" font-weight="bold" font-family="sans-serif">${p?'✓':'+'}</text>
+      </g>
+      <text x="${pos.x}" y="${pos.y+40}" text-anchor="middle" fill="#8da4c0" font-size="8" font-family="sans-serif">${p?p.marca||'':''}</text>`;
+    } else {
+      svgContent+=`<g class="tire-btn" onmouseenter="showDiagTooltip(event,'${pos.id}','${vehId}')" onmouseleave="hideDiagTooltip()" style="cursor:pointer">
+        <ellipse cx="${pos.x}" cy="${pos.y}" rx="26" ry="17" fill="${cor}" opacity="0.25" stroke="${cor}" stroke-width="2"/>
+        <ellipse cx="${pos.x}" cy="${pos.y}" rx="14" ry="9" fill="${cor}" opacity="0.5"/>
+        <text x="${pos.x}" y="${pos.y+4}" text-anchor="middle" fill="${cor}" font-size="9" font-weight="bold" font-family="sans-serif">${p?'✓':'+'}</text>
+      </g>`;
+    }
+  });
+
+  area.innerHTML=`<div style="position:relative;display:inline-block;width:100%;max-width:280px">
+    <svg viewBox="0 0 260 ${svgH}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;margin:0 auto">${svgContent}</svg>
+    <div id="diag-tooltip" class="tire-tooltip-popup" style="display:none"></div>
+  </div>
+  <div style="font-size:12px;color:var(--text3);margin-top:10px;text-align:center">
+    <span style="color:#22c87a">■</span> OK &nbsp; <span style="color:#f0b429">■</span> Atenção (&lt;3mm) &nbsp; <span style="color:#f05252">■</span> Trocar! (&lt;1,6mm) &nbsp; <span style="color:#4a6080">■</span> Sem dados
+  </div>`;
+}
+
+function showDiagTooltip(event, posId, vehId){
+  const pneus=DB.get('pneus').filter(p=>p.vehId===vehId&&p.posId===posId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const pos=(vehId&&DB.get('vehicles').find(v=>v.id===vehId)?.tipo==='moto'?PNEU_POS_MOTO:PNEU_POS_CARRO).find(pp=>pp.id===posId);
+  const p=pneus[0];
+  const tt=document.getElementById('diag-tooltip');
+  if(!tt) return;
+  if(!p){tt.innerHTML=`<strong>${pos?.label||posId}</strong>Sem dados cadastrados<br><span style="color:var(--accent);font-size:11px">Use "Registrar pneu" para adicionar</span>`;}
+  else{
+    const dias=p.dataInst?Math.round((Date.now()-new Date(p.dataInst))/86400000):null;
+    tt.innerHTML=`<strong>${pos?.label||posId}</strong>
+      🏷 ${p.marca||'—'} ${p.modelo||''}<br>
+      📅 ${p.dataInst?fmtDate(p.dataInst)+(dias?' ('+dias+'d)':''):'—'}<br>
+      🛣 KM inst.: ${p.kmInst?Number(p.kmInst).toLocaleString('pt-BR')+' km':'—'}<br>
+      🏪 ${p.local||'—'}<br>
+      📏 ${p.banda?p.banda+'mm banda':'—'} · ${p.pressao?p.pressao+' PSI':'—'}<br>
+      💰 ${p.valor?fmtMoney(p.valor):'—'}`;
+  }
+  tt.style.display='block';
+  const rect=event.currentTarget.closest('div').getBoundingClientRect();
+  const ex=event.clientX,ey=event.clientY;
+  tt.style.left=Math.min(ex-rect.left+10,rect.width-200)+'px';
+  tt.style.top=(ey-rect.top+10)+'px';
+}
+function hideDiagTooltip(){setTimeout(()=>{const t=document.getElementById('diag-tooltip');if(t)t.style.display='none';},200);}
+
+// ══════════════════════════════════════════
+//  CHECKLIST
+// ══════════════════════════════════════════
+function renderChecklistHist(){
+  const checklists=[...DB.get('checklists')||[],...DB.get('checklists_semanal')||[]]
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const vehs=DB.get('vehicles');const drvs=DB.get('drivers');
+  const tbody=document.getElementById('checklist-hist-table');
+  tbody.innerHTML=checklists.map(c=>{
+    const veh=vehs.find(v=>v.id===c.vehId);
+    const drv=drvs.find(d=>d.id===c.drvId);
+    return `<tr>
+      <td>${fmtDateTime(c.createdAt)}</td>
+      <td><span class="badge ${c.tipo==='semanal'?'badge-info':'badge-ok'}">${c.tipo||'diário'}</span></td>
+      <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+      <td>${drv?drv.nome:'—'}</td>
+      <td>${c.okCount||0}/${c.totalCount||0} <span style="color:var(--text3);font-size:11px">(${c.totalCount?Math.round(c.okCount/c.totalCount*100):0}%)</span></td>
+      <td style="max-width:200px;font-size:12px;color:var(--text2)">${c.obs||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:30px">Nenhum checklist</td></tr>';
+}
+
+function renderFotosGestor(){
+  const vehFiltro=document.getElementById('fotos-filtro-veh')?.value||'';
+  const mesFiltro=document.getElementById('fotos-filtro-mes')?.value||'';
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+  const semanais=(DB.get('checklists_semanal')||[]).filter(c=>{
+    if(vehFiltro&&c.vehId!==vehFiltro) return false;
+    if(mesFiltro&&(!c.data||!c.data.startsWith(mesFiltro))) return false;
+    return c.fotos&&Object.keys(c.fotos).length>0;
+  }).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const el=document.getElementById('fotos-gestor-lista');
+  if(!semanais.length){el.innerHTML='<div class="empty"><i class="fa fa-camera"></i><p>Nenhuma foto encontrada</p></div>';return;}
+  el.innerHTML=semanais.map(c=>{
+    const veh=vehs.find(v=>v.id===c.vehId);
+    const drv=drvs.find(d=>d.id===c.drvId);
+    const fotosHtml=Object.entries(c.fotos||{}).map(([posId,foto])=>`
+      <div style="flex:1;min-width:180px;max-width:220px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:4px">${posId.replace(/_/g,' ')}</div>
+        <img src="${foto.base64}" style="width:100%;height:140px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer" onclick="window.open(this.src,'_blank')">
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">${foto.timestamp||''}</div>
+      </div>`).join('');
+    return `<div class="card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-weight:700">${veh?veh.modelo+' · '+veh.placa:'—'}</div>
+          <div style="font-size:12px;color:var(--text3)">${fmtDate(c.data)} · ${drv?drv.nome:'—'}</div>
+        </div>
+        <span class="badge badge-info">Semanal</span>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">${fotosHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════
+function renderDashboard(){
+  const vehs=DB.get('vehicles');
+  const drvs=DB.get('drivers');
+  const fuels=DB.get('fuels');
+  const maints=DB.get('maintenances');
+  const cfg=DB.getObj('config');
+  const diasAlerta=parseInt(cfg.cnhDias)||30;
+  const alertKm=parseInt(cfg.mntKm)||1000;
+
+  // Métricas
+  const totalFuelCost=fuels.reduce((s,f)=>s+Number(f.total||f.totalNota||0),0);
+  const totalMaintCost=maints.reduce((s,m)=>s+Number(m.custo||0),0);
+  document.getElementById('dash-metrics').innerHTML=[
+    {label:'Veículos',val:vehs.length,cls:'blue',icon:'fa-car',sub:'na frota'},
+    {label:'Motoristas',val:drvs.length,cls:'green',icon:'fa-users',sub:'cadastrados'},
+    {label:'Gasto combustível',val:fmtMoney(totalFuelCost),cls:'yellow',icon:'fa-gas-pump',sub:'total acumulado'},
+    {label:'Gasto manutenção',val:fmtMoney(totalMaintCost),cls:'red',icon:'fa-wrench',sub:'total acumulado'}
+  ].map(m=>`<div class="metric-card ${m.cls}"><div class="metric-icon"><i class="fa ${m.icon}"></i></div><div class="metric-label">${m.label}</div><div class="metric-value">${m.val}</div><div class="metric-sub">${m.sub}</div></div>`).join('');
+
+  // Selector resumo
+  const sel=document.getElementById('dash-resumo-veh');
+  if(sel){
+    const cur=sel.value;
+    sel.innerHTML='<option value="">Selecione um veículo...</option>'+vehs.map(v=>`<option value="${v.id}" ${v.id===cur?'selected':''}>${v.modelo} — ${v.placa}</option>`).join('');
+  }
+
+  // Alertas
+  const alerts=[];
+  drvs.forEach(d=>{
+    const days=Math.round((new Date(d.validade+' 00:00:00')-new Date().setHours(0,0,0,0))/86400000);
+    if(days<0)alerts.push({type:'danger',msg:`CNH de <strong>${d.nome}</strong> vencida há ${Math.abs(days)} dias!`});
+    else if(days<=diasAlerta)alerts.push({type:'warn',msg:`CNH de <strong>${d.nome}</strong> vence em ${days} dias`});
+  });
+  maints.forEach(m=>{
+    const veh=vehs.find(v=>v.id===m.vehId);
+    if(m.proxKm&&veh){const diff=m.proxKm-Number(veh.km||0);if(diff<=0)alerts.push({type:'danger',msg:`Manutenção vencida: <strong>${veh.modelo}</strong> — ${m.servico}`});else if(diff<=alertKm)alerts.push({type:'warn',msg:`Manutenção próxima: <strong>${veh.modelo}</strong> — ${m.servico} (faltam ${diff.toLocaleString()} km)`});}
+  });
+
+  // KML alerts
+  vehs.forEach(v=>{
+    const stats=calcKmlForVehicle(v.id);
+    if(stats&&v.consumo){
+      const refKml=parseFloat(v.consumo);
+      const ratio=stats.ultimoKml/refKml;
+      if(ratio<0.75)alerts.push({type:'danger',msg:`⛽ Consumo anormal em <strong>${v.modelo} (${v.placa})</strong>: ${stats.ultimoKml.toFixed(1)} km/l (esperado ~${refKml} km/l)`});
+      else if(ratio<0.9)alerts.push({type:'warn',msg:`⛽ Consumo elevado em <strong>${v.modelo} (${v.placa})</strong>: ${stats.ultimoKml.toFixed(1)} km/l`});
+    }
+  });
+
+  document.getElementById('dash-alerts').innerHTML=alerts.map(a=>`<div class="alert-box ${a.type}"><i class="fa ${a.type==='danger'?'fa-triangle-exclamation':'fa-circle-exclamation'}"></i><div>${a.msg}</div></div>`).join('')||'<div class="empty"><i class="fa fa-circle-check"></i><p>Nenhum alerta</p></div>';
+  document.getElementById('bell-dot').style.display=alerts.length?'':'none';
+
+  // Fleet table
+  const tbody=document.getElementById('dash-fleet-table');
+  tbody.innerHTML=vehs.map(v=>{
+    const drv=drvs.find(d=>d.id===v.motorista);
+    const stats=calcKmlForVehicle(v.id);
+    return `<tr onclick="openVehResumoById('${v.id}')" style="cursor:pointer">
+      <td><strong>${v.modelo}</strong><br><span class="veh-plate">${v.placa}</span></td>
+      <td style="font-size:12px;color:var(--text2)">${drv?drv.nome:'—'}</td>
+      <td>${Number(v.km||0).toLocaleString('pt-BR')} km</td>
+      <td style="color:${stats?'var(--green)':'var(--text3)'}">${stats?stats.mediaKml.toFixed(1)+' km/l':'—'}</td>
+      <td style="color:var(--yellow)">${stats?fmtMoney(stats.mediaCustoKm)+'/km':'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--text3)">Nenhum veículo</td></tr>';
+
+  // Fuel table
+  const recentFuels=fuels.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
+  const allKmlMaps={};vehs.forEach(v=>{allKmlMaps[v.id]=buildKmlMap(v.id);});
+  document.getElementById('dash-fuel-table').innerHTML=recentFuels.map(f=>{
+    const veh=vehs.find(v=>v.id===f.vehId);
+    const drv=drvs.find(d=>d.id===f.drvId);
+    const kmlData=allKmlMaps[f.vehId]?.[f.id];
+    const precoLitro=f.precoLitro||(f.total&&f.litros?f.total/f.litros:0);
+    return `<tr>
+      <td>${fmtDate(f.data)}</td>
+      <td>${veh?veh.modelo+' · '+veh.placa:'—'}</td>
+      <td style="font-size:12px">${drv?drv.nome:'—'}</td>
+      <td>${parseFloat(f.litros||0).toFixed(1)} L</td>
+      <td style="font-weight:700;color:var(--orange)">${fmtMoney(f.total||f.totalNota||0)}</td>
+      <td>${fmtMoney(precoLitro)}/l</td>
+      <td style="color:${kmlData?'var(--green)':'var(--text3)'}">${kmlData?kmlData.kml.toFixed(2):'—'}</td>
+      <td style="color:var(--yellow)">${kmlData?fmtMoney(kmlData.custoKm)+'/km':'—'}</td>
+      <td>${f.posto||'—'}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="9" style="text-align:center;color:var(--text3)">Nenhum abastecimento</td></tr>';
+}
+
+// ══════════════════════════════════════════
+//  POPULATE HELPERS
+// ══════════════════════════════════════════
+function populateVehiclesForModal(selId){
+  const sel=document.getElementById(selId);if(!sel)return;
+  const vehs=DB.get('vehicles');
+  sel.innerHTML='<option value="">Selecione</option>'+vehs.map(v=>`<option value="${v.id}">${v.modelo} — ${v.placa}</option>`).join('');
+}
+function populateAllDriversSelect(selId){
+  const sel=document.getElementById(selId);if(!sel)return;
+  const drvs=DB.get('drivers');
+  sel.innerHTML='<option value="">Não informado</option>'+drvs.map(d=>`<option value="${d.id}">${d.nome}</option>`).join('');
+}
+function populateAllSelects(){
+  populateVehiclesForModal('mnt-veh');
+  populateAllDriversSelect('mnt-motorista');
+  populateVehiclesForModal('tire-veh');
+  populateAllDriversSelect('tire-motorista');
+  populateDriverSelect('veh-motorista');
+  populateVehicleSelect('drv-veiculo-designado');
+  // Pneu diagrama gestor
+  const pneuSel=document.getElementById('pneu-diagrama-veh');
+  if(pneuSel){
+    const cur=pneuSel.value;
+    const vehs=DB.get('vehicles');
+    pneuSel.innerHTML='<option value="">Selecione um veículo</option>'+vehs.map(v=>`<option value="${v.id}" ${v.id===cur?'selected':''}>${v.modelo} — ${v.placa}</option>`).join('');
+  }
+  // Fotos filtro
+  const fotoSel=document.getElementById('fotos-filtro-veh');
+  if(fotoSel){
+    const cur=fotoSel.value;
+    const vehs=DB.get('vehicles');
+    fotoSel.innerHTML='<option value="">Todos os veículos</option>'+vehs.map(v=>`<option value="${v.id}" ${v.id===cur?'selected':''}>${v.modelo} — ${v.placa}</option>`).join('');
+  }
+  // Dash resumo
+  const dashSel=document.getElementById('dash-resumo-veh');
+  if(dashSel&&!dashSel.options.length>1){
+    const vehs=DB.get('vehicles');
+    dashSel.innerHTML='<option value="">Selecione um veículo...</option>'+vehs.map(v=>`<option value="${v.id}">${v.modelo} — ${v.placa}</option>`).join('');
+  }
+}
+
+// ══════════════════════════════════════════
+//  CONFIG
+// ══════════════════════════════════════════
+async function saveConfig(){
+  const cfg={
+    ejsService:document.getElementById('cfg-ejs-service').value,
+    ejsTemplate:document.getElementById('cfg-ejs-template').value,
+    ejsPubkey:document.getElementById('cfg-ejs-pubkey').value,
+    tgToken:document.getElementById('cfg-tg-token').value,
+    tgChat:document.getElementById('cfg-tg-chat').value,
+    empresa:document.getElementById('cfg-empresa').value,
+    cnhDias:document.getElementById('cfg-cnh-dias').value,
+    mntKm:document.getElementById('cfg-mnt-km').value
+  };
+  await api.post('config',cfg); _cache['config']=cfg;
+  if(cfg.ejsPubkey) emailjs.init(cfg.ejsPubkey);
+  toast('Configurações salvas!');
+}
+function loadConfig(){
+  const cfg=DB.getObj('config')||{};
+  if(cfg.ejsService) document.getElementById('cfg-ejs-service').value=cfg.ejsService;
+  if(cfg.ejsTemplate) document.getElementById('cfg-ejs-template').value=cfg.ejsTemplate;
+  if(cfg.ejsPubkey){document.getElementById('cfg-ejs-pubkey').value=cfg.ejsPubkey;emailjs.init(cfg.ejsPubkey);}
+  if(cfg.tgToken) document.getElementById('cfg-tg-token').value=cfg.tgToken;
+  if(cfg.tgChat) document.getElementById('cfg-tg-chat').value=cfg.tgChat;
+  if(cfg.empresa) document.getElementById('cfg-empresa').value=cfg.empresa;
+  if(cfg.cnhDias) document.getElementById('cfg-cnh-dias').value=cfg.cnhDias;
+  if(cfg.mntKm) document.getElementById('cfg-mnt-km').value=cfg.mntKm;
+}
+async function clearAllData(){
+  if(!confirm('Isso apagará TODOS os dados. Confirma?')) return;
+  const cols=['vehicles','drivers','fuels','maintenances','tires','checklists','kms','ocorrencias'];
+  for(const col of cols){ for(const item of (DB.get(col)||[])){ await api.del(col,item.id); } _cache[col]=[]; }
+  toast('Dados apagados!','warn');refreshAll();
+}
+
+// ══════════════════════════════════════════
+//  REPORTS
+// ══════════════════════════════════════════
+function previewReport(){
+  const content=buildReportContent();
+  document.getElementById('report-content').innerHTML=content;
+  document.getElementById('report-preview-area').style.display='block';
+  document.getElementById('report-placeholder').style.display='none';
+}
+function buildReportContent(){
+  const dias=parseInt(document.getElementById('rel-periodo').value)||30;
+  const cutoff=new Date(); cutoff.setDate(cutoff.getDate()-dias);
+  const cfg=DB.getObj('config');
+  const empresa=cfg.empresa||'CentralNet';
+  const vehs=DB.get('vehicles'); const drvs=DB.get('drivers');
+  let html=`<div class="report-block"><div class="report-block-title">${empresa} — Relatório de Frota</div>
+    <div class="report-row"><span>Gerado em</span><span>${new Date().toLocaleString('pt-BR')}</span></div>
+    <div class="report-row"><span>Período</span><span>Últimos ${dias} dias</span></div>
+    <div class="report-row"><span>Veículos na frota</span><span>${vehs.length}</span></div>
+    <div class="report-row"><span>Motoristas</span><span>${drvs.length}</span></div></div>`;
+
+  if(document.getElementById('rel-combustivel').checked){
+    const fuels=DB.get('fuels').filter(f=>new Date(f.data)>=cutoff);
+    const totalLit=fuels.reduce((s,f)=>s+Number(f.litros||0),0);
+    const totalVal=fuels.reduce((s,f)=>s+Number(f.total||f.totalNota||0),0);
+    html+=`<div class="report-block"><div class="report-block-title">Combustível</div>
+      <div class="report-row"><span>Abastecimentos</span><span>${fuels.length}</span></div>
+      <div class="report-row"><span>Total litros</span><span>${totalLit.toFixed(1)} L</span></div>
+      <div class="report-row"><span>Gasto total</span><span>${fmtMoney(totalVal)}</span></div>
+      <div class="report-row"><span>R$/L médio</span><span>${totalLit?fmtMoney(totalVal/totalLit)+'/l':'—'}</span></div></div>`;
+    vehs.forEach(v=>{
+      const stats=calcKmlForVehicle(v.id);
+      if(stats)html+=`<div class="report-row"><span>${v.modelo} (${v.placa})</span><span>${stats.mediaKml.toFixed(2)} km/l · ${fmtMoney(stats.mediaCustoKm)}/km</span></div>`;
+    });
+  }
+  if(document.getElementById('rel-manutencao').checked){
+    const maints=DB.get('maintenances').filter(m=>new Date(m.data)>=cutoff);
+    const totalCust=maints.reduce((s,m)=>s+Number(m.custo||0),0);
+    html+=`<div class="report-block"><div class="report-block-title">Manutenção</div>
+      <div class="report-row"><span>OSs realizadas</span><span>${maints.length}</span></div>
+      <div class="report-row"><span>Custo total</span><span>${fmtMoney(totalCust)}</span></div></div>`;
+  }
+  if(document.getElementById('rel-cnh').checked){
+    const alert30=drvs.filter(d=>{const days=Math.round((new Date(d.validade+' 00:00:00')-new Date().setHours(0,0,0,0))/86400000);return days<=30;});
+    if(alert30.length)html+=`<div class="report-block"><div class="report-block-title">CNHs próximas do vencimento</div>${alert30.map(d=>{const days=Math.round((new Date(d.validade+' 00:00:00')-new Date().setHours(0,0,0,0))/86400000);return`<div class="report-row"><span>${d.nome}</span><span>${days<0?'VENCIDA há '+Math.abs(days)+'d':days+' dias'}</span></div>`;}).join('')}</div>`;
+  }
+  return html;
+}
+async function sendEmailReport(){
+  const cfg=DB.getObj('config');
+  const email=document.getElementById('rel-email').value;
+  if(!email){toast('Informe o e-mail destinatário!','err');return;}
+  if(!cfg.ejsService||!cfg.ejsTemplate){toast('Configure o EmailJS primeiro!','warn');return;}
+  const content=buildReportContent().replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+  try{
+    await emailjs.send(cfg.ejsService,cfg.ejsTemplate,{to_email:email,subject:'Relatório de Frota — CentralNet',message:content});
+    toast('E-mail enviado com sucesso!');
+  }catch(e){toast('Erro ao enviar: '+e.text,'err');}
+}
+async function sendTelegramReport(){
+  const cfg=DB.getObj('config');
+  if(!cfg.tgToken||!cfg.tgChat){toast('Configure o bot Telegram nas configurações!','warn');return;}
+  const vehs=DB.get('vehicles');const drvs=DB.get('drivers');const fuels=DB.get('fuels');const maints=DB.get('maintenances');
+  const empresa=cfg.empresa||'CentralNet';
+  const totalFuel=fuels.reduce((s,f)=>s+Number(f.total||f.totalNota||0),0);
+  const totalMaint=maints.reduce((s,f)=>s+Number(f.custo||0),0);
+  let msg=`🚗 *${empresa} — Resumo de Frota*\n📅 ${new Date().toLocaleString('pt-BR')}\n\n`;
+  msg+=`🚌 Frota: ${vehs.length} veículos | 👤 Motoristas: ${drvs.length}\n`;
+  msg+=`⛽ Combustível: ${fmtMoney(totalFuel)} | 🔧 Manutenção: ${fmtMoney(totalMaint)}\n\n`;
+  vehs.forEach(v=>{const stats=calcKmlForVehicle(v.id);msg+=`• ${v.modelo} (${v.placa}): ${Number(v.km||0).toLocaleString('pt-BR')} km${stats?' | '+stats.mediaKml.toFixed(1)+' km/l | '+fmtMoney(stats.mediaCustoKm)+'/km':''}\n`;});
+  try{
+    const r=await fetch(`https://api.telegram.org/bot${cfg.tgToken}/sendMessage`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:cfg.tgChat,text:msg,parse_mode:'Markdown'})});
+    const data=await r.json();
+    if(data.ok)toast('Relatório enviado ao Telegram!');
+    else toast('Erro Telegram: '+data.description,'err');
+  }catch(e){toast('Erro de conexão com Telegram','err');}
+}
+
+// ══════════════════════════════════════════
+//  REFRESH ALL
+// ══════════════════════════════════════════
+function refreshAll(){
+  populateAllSelects();
+  renderDashboard();
+  renderFrota();
+  renderFuelTable();
+  renderMaint();
+  renderPneuHistoryTable();
+  renderCNH();
+  renderChecklistHist();
+  renderPostosConfigPreview();
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+(function(){
+  // Init runs immediately - pin screen is already visible in HTML
+  // Data loads only after successful login (see doGestorLogin)
+})();
+
+// ══════════════════════════════════════════
+//  PIN LOGIN & LOG DE ATIVIDADES
+// ══════════════════════════════════════════
+
+// Usuários do gestor (PIN hasheado seria melhor, mas mantemos simples)
+const GESTOR_USERS = {
+  'victor':     { name: 'Victor',     pin: '1947', initials: 'V' },
+  'abelardo':   { name: 'Abelardo',   pin: '2831', initials: 'A' },
+  'wellington': { name: 'Wellington', pin: '5074', initials: 'W' },
+  'rafael':     { name: 'Rafael',     pin: '3362', initials: 'R' },
+  'alberevam':  { name: 'Alberevam',  pin: '6619', initials: 'AL' },
+  'antonni':    { name: 'Antonni',    pin: '7823', initials: 'AN' }
+};
+
+let currentGestorUser = null;
+let gPinBuffer = '';
+let gSelectedUserId = null;
+
+// ── AUTO-LOGIN por sessão ──
+(function() {
+  var SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos
+  try {
+    var saved = sessionStorage.getItem('frota_user');
+    if (!saved) return;
+    var sess = JSON.parse(saved);
+    if (!sess || !sess.id || !sess.ts) return;
+    if (Date.now() - sess.ts > SESSION_TIMEOUT) {
+      sessionStorage.removeItem('frota_user');
+      return;
+    }
+    var user = GESTOR_USERS[sess.id];
+    if (!user) return;
+    // Sessão válida — renovar timestamp e entrar direto
+    sess.ts = Date.now();
+    sessionStorage.setItem('frota_user', JSON.stringify(sess));
+    currentGestorUser = user;
+    document.getElementById('pin-login-screen').innerHTML =
+      '<img src="/logo.png" style="width:160px;margin-bottom:20px">' +
+      '<div style="font-size:15px;color:#9aa3c0;font-family:sans-serif">Carregando dados...</div>';
+    hydrateCache().then(function() {
+      loadConfig();
+      refreshAll();
+      document.getElementById('pin-login-screen').style.display = 'none';
+      var headerEl = document.getElementById('header-user-badge');
+      if (headerEl) headerEl.textContent = user.name;
+      setInterval(function(){ hydrateCache().then(function(){ refreshAll(); }); }, 30000);
+      // Renovar sessão a cada interação
+      document.addEventListener('click', function() {
+        var s = sessionStorage.getItem('frota_user');
+        if (s) { var o = JSON.parse(s); o.ts = Date.now(); sessionStorage.setItem('frota_user', JSON.stringify(o)); }
+      });
+    }).catch(function() {
+      sessionStorage.removeItem('frota_user');
+      document.getElementById('pin-login-screen').style.display = 'flex';
+      document.getElementById('pin-login-screen').innerHTML = '<div style="color:#f05252;font-family:sans-serif">Falha ao conectar</div>';
+    });
+  } catch(e) {
+    sessionStorage.removeItem('frota_user');
+  }
+})();
+
+
+function selectUser(id, name, initials, pin) {
+  gSelectedUserId = id;
+  gPinBuffer = '';
+  document.getElementById('pin-who').textContent = 'PIN para ' + name;
+  document.getElementById('pin-user-grid').style.display = 'none';
+  var kw=document.getElementById('pin-keypad-wrap'); kw.style.display='flex'; kw.classList.add('show');
+  updateGDots();
+  document.getElementById('pin-gerror').textContent = '';
+}
+
+function backToUsers() {
+  gPinBuffer = '';
+  gSelectedUserId = null;
+  document.getElementById('pin-user-grid').style.display = 'grid';
+  var kw=document.getElementById('pin-keypad-wrap'); kw.style.display='none'; kw.classList.remove('show');
+  updateGDots();
+}
+
+function gPinPress(d, btn) {
+  if (gPinBuffer.length >= 4) return;
+  if (btn) { btn.style.background='#F26522'; btn.style.color='#fff'; setTimeout(function(){ btn.style.background=''; btn.style.color=''; }, 150); }
+  gPinBuffer += d;
+  updateGDots();
+  if (gPinBuffer.length === 4) setTimeout(doGestorLogin, 120);
+}
+
+function gPinBack() {
+  gPinBuffer = gPinBuffer.slice(0, -1);
+  updateGDots();
+  document.getElementById('pin-gerror').textContent = '';
+}
+
+function updateGDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('gdot-' + i)?.classList.toggle('filled', i < gPinBuffer.length);
+  }
+}
+
+function doGestorLogin() {
+  var user = GESTOR_USERS[gSelectedUserId];
+  if (!user || gPinBuffer !== user.pin) {
+    gPinBuffer = '';
+    updateGDots();
+    document.getElementById('pin-gerror').textContent = 'PIN incorreto. Tente novamente.';
+    document.querySelectorAll('[id^=gdot-]').forEach(function(d) {
+      d.style.background = '#f05252';
+      setTimeout(function(){ d.style.background = ''; }, 600);
+    });
+    return;
+  }
+  // Login OK
+  currentGestorUser = user;
+  sessionStorage.setItem('frota_user', JSON.stringify({id: gSelectedUserId, ts: Date.now()}));
+  document.getElementById('pin-login-screen').innerHTML =
+    '<img src="/logo.png" style="width:160px;margin-bottom:20px">' +
+    '<div style="font-size:15px;color:#9aa3c0;font-family:sans-serif">Carregando dados...</div>';
+  hydrateCache().then(function() {
+    loadConfig();
+    refreshAll();
+    document.getElementById('pin-login-screen').style.display = 'none';
+    addLog('Login', 'Acessou o sistema');
+    var headerEl = document.getElementById('header-user-badge');
+    if (headerEl) headerEl.textContent = user.name;
+    setInterval(function(){ hydrateCache().then(function(){ refreshAll(); }); }, 30000);
+  }).catch(function(e) {
+    document.getElementById('pin-login-screen').innerHTML =
+      '<div style="font-size:15px;color:#f05252;font-family:sans-serif">Falha ao conectar com o servidor</div>' +
+      '<button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#F26522;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;font-family:sans-serif">Tentar novamente</button>';
+  });
+}
+
+// ── LOG ──
+function addLog(action, detail) {
+  if (!currentGestorUser) return;
+  const log = JSON.parse(localStorage.getItem('fleet_log') || '[]');
+  log.unshift({
+    id: Date.now().toString(36),
+    user: currentGestorUser.name,
+    initials: currentGestorUser.initials,
+    action,
+    detail,
+    ts: new Date().toISOString()
+  });
+  // Keep last 500 entries
+  if (log.length > 500) log.splice(500);
+  localStorage.setItem('fleet_log', JSON.stringify(log));
+}
+
+function renderLog() {
+  const log = JSON.parse(localStorage.getItem('fleet_log') || '[]');
+  const filterUser = document.getElementById('log-filter-user')?.value || '';
+  const filterAction = document.getElementById('log-filter-action')?.value || '';
+  const el = document.getElementById('log-list');
+  if (!el) return;
+
+  const filtered = log.filter(e =>
+    (!filterUser || e.user === filterUser) &&
+    (!filterAction || e.action.includes(filterAction))
+  );
+
+  if (!filtered.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text3);padding:24px">Nenhuma atividade registrada</div>';
+    return;
+  }
+
+  el.innerHTML = filtered.map(e => {
+    const dt = new Date(e.ts);
+    const dateStr = dt.toLocaleDateString('pt-BR') + ' ' + dt.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+    return `<div class="log-item">
+      <div class="log-avatar">${e.initials}</div>
+      <div class="log-body">
+        <div class="log-action"><strong>${e.user}</strong> — ${e.action}: ${e.detail}</div>
+        <div class="log-time">${dateStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function logoutGestor() {
+  if (!confirm('Sair do sistema?')) return;
+  addLog('Login', 'Saiu do sistema');
+  sessionStorage.removeItem('frota_user');
+  currentGestorUser = null;
+  gPinBuffer = ''; gSelectedUserId = null;
+  backToUsers();
+  document.getElementById('pin-login-screen').style.display = 'flex';
+  document.getElementById('header-user-badge').textContent = '';
+}
+
+function clearLog() {
+  if (!confirm('Limpar todo o log de atividades?')) return;
+  localStorage.removeItem('fleet_log');
+  renderLog();
+  toast('Log limpo', 'warn');
+}
+
+</script>
+<div id="toast-container"></div>
+<input type="hidden" id="mnt-motorista">
+<input type="hidden" id="mnt-obs">
+<input type="hidden" id="veh-motorista">
+<input type="hidden" id="veh-renavam">
+<input type="hidden" id="mnt-proxkm">
+<input type="hidden" id="fuel-motorista">
+<input type="hidden" id="mnt-garantia">
+<input type="hidden" id="fuel-total-nota">
+<input type="hidden" id="tire-motorista">
+<input type="hidden" id="drv-veiculo-designado">
+</body>
+</html>
