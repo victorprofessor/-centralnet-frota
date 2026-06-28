@@ -882,14 +882,8 @@ select option { background: var(--bg3); }
       <button class="modal-close" onclick="closeModal('modal-pneu')"><i class="fa fa-xmark"></i></button>
     </div>
     <div class="form-grid">
-      <div class="form-row"><label class="flabel">Veículo *</label><select id="pneu-veh"></select></div>
+      <div class="form-row"><label class="flabel">Veículo *</label><select id="pneu-veh" onchange="updatePosicaoOptions()"></select></div>
       <div class="form-row"><label class="flabel">Posição *</label><select id="pneu-posicao">
-        <option value="Dianteiro esquerdo">Dianteiro esquerdo</option>
-        <option value="Dianteiro direito">Dianteiro direito</option>
-        <option value="Traseiro esquerdo">Traseiro esquerdo</option>
-        <option value="Traseiro direito">Traseiro direito</option>
-        <option value="Estepe">Estepe</option>
-        <option value="Dianteiro">Dianteiro</option>
         <option value="Traseiro">Traseiro</option>
       </select></div>
     </div>
@@ -1893,6 +1887,16 @@ function openModalPneu(vehId){
   var posSel=document.getElementById('pneu-posicao');
   if(posSel&&vehId){var veh=DB.get('vehicles').find(function(v){return v.id===vehId;});if(veh){var pa=veh.tipo==='moto'?PNEU_POS_MOTO:PNEU_POS_CARRO;posSel.innerHTML='<option value="">Selecione...</option>'+pa.map(function(p){return '<option value="'+p.id+'">'+p.label+'</option>';}).join('');}}
 }
+function updatePosicaoOptions(){
+  const vehId=document.getElementById('pneu-veh').value;
+  const veh=DB.get('vehicles').find(v=>v.id===vehId);
+  const isMoto=veh&&veh.tipo==='moto';
+  const posicoes=isMoto?PNEU_POS_MOTO:PNEU_POS_CARRO;
+  const sel=document.getElementById('pneu-posicao');
+  sel.innerHTML='<option value="">Selecione...</option>'+posicoes.map(p=>'<option value="'+p.id+'">'+p.label+'</option>').join('');
+  renderTireModalDiagram();
+}
+
 function openTireModal(){
   tirePosAtiva=null; tirePosData={};
   populateVehiclesForModal('tire-veh');

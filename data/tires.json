@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "id": "mqwhl8nkkf48",
+    "vehId": "mqvphstv30ox",
+    "posId": "dianteiro",
+    "posLabel": "Dianteiro",
+    "marca": "Maggion",
+    "modelo": "",
+    "dataInst": "2026-06-20",
+    "kmInst": 100,
+    "local": "Via Motos",
+    "valor": 120,
+    "situacao": "ok",
+    "createdAt": "2026-06-27T15:00:12.944Z"
+  }
+]
