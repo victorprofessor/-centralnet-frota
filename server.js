@@ -25,7 +25,15 @@ const server=http.createServer(async(req,res)=>{
     try{
       if(req.method==='GET'&&!id){json(res,200,readCol(col));return;}
       if(req.method==='GET'&&id){const data=readCol(col);if(col==='config'){json(res,200,data);return;}const item=data.find(x=>x.id===id);json(res,item?200:404,item||{error:'not found'});return;}
-      if(req.method==='POST'&&!id){const body=await readBody(req);if(col==='config'){writeCol(col,body);json(res,200,body);return;}const data=readCol(col);if(!body.id)body.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);if(!body.createdAt)body.createdAt=new Date().toISOString();data.push(body);writeCol(col,data);json(res,201,body);return;}
+      if(req.method==='POST'&&!id){const body=await readBody(req);if(col==='config'){writeCol(col,body);json(res,200,body);return;}const data=readCol(col);if(!body.id)body.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);if(!body.createdAt)body.createdAt=new Date().toISOString();data.push(body);writeCol(col,data);json(res,201,body);
+    if(col==='checklists'){
+      const veiculos=readCol('vehicles');const motoristas=readCol('drivers');
+      const veh=veiculos.find(v=>v.id===body.vehId);const mot=motoristas.find(d=>d.id===body.driverId);
+      const itens=(body.items||[]).map(i=>(i.ok?'✅':'❌')+' '+i.label).join('\n');
+      const msg=`🚗 <b>Checklist Diário</b>\n👤 Motorista: ${mot?mot.nome:'—'}\n🚘 Veículo: ${veh?veh.modelo+' '+veh.placa:'—'}\n📅 Data: ${new Date().toLocaleDateString('pt-BR')}\n\n${itens}`;
+      notificarTelegramFrota(msg);
+    }
+    return;}
       if(req.method==='PUT'&&id){const body=await readBody(req);const data=readCol(col);const idx=data.findIndex(x=>x.id===id);if(idx===-1){json(res,404,{error:'not found'});return;}data[idx]={...data[idx],...body,id};writeCol(col,data);
       // Sincronizar vínculo motorista <-> veículo
       if(col==='drivers'){
