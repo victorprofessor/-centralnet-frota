@@ -299,8 +299,12 @@ select option { background: var(--bg3); }
       <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">AN</span>
       <span style="font-size:13px;font-weight:600;pointer-events:none">Antonni</span>
     </button>
+    <button type="button" onclick="selectUser('leonardo','Leonardo','LE','3847')" style="background:#1a2030;border:1px solid #2a3d5e;border-radius:12px;padding:16px 8px;cursor:pointer;color:#e8edf5;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+      <span style="width:42px;height:42px;border-radius:50%;background:#212840;color:#F26522;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;pointer-events:none">LE</span>
+      <span style="font-size:13px;font-weight:600;pointer-events:none">Leonardo</span>
+    </button>
   </div>
-  <div id="pin-keypad-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:300px;margin-top:16px">
+        <div id="pin-keypad-wrap" style="display:none;flex-direction:column;align-items:center;width:100%;max-width:300px;margin-top:16px">
     <p id="pin-who" style="color:#8da4c0;font-size:14px;margin-bottom:16px;font-family:sans-serif;text-align:center"></p>
     <div style="display:flex;gap:12px;margin-bottom:12px">
       <span id="gdot-0" class="pin-dot"></span>
@@ -2454,7 +2458,8 @@ const GESTOR_USERS = {
   'wellington': { name: 'Wellington', pin: '5074', initials: 'W' },
   'rafael':     { name: 'Rafael',     pin: '3362', initials: 'R' },
   'alberevam':  { name: 'Alberevam',  pin: '6619', initials: 'AL' },
-  'antonni':    { name: 'Antonni',    pin: '7823', initials: 'AN' }
+  'antonni':    { name: 'Antonni',    pin: '7823', initials: 'AN' },
+  'leonardo':   { name: 'Leonardo',   pin: '3847', initials: 'LE' }
 };
 
 let currentGestorUser = null;
@@ -2624,14 +2629,34 @@ function renderLog() {
 }
 
 function logoutGestor() {
-  if (!confirm('Sair do sistema?')) return;
-  addLog('Login', 'Saiu do sistema');
+  var m = document.createElement('div');
+  m.id = 'g-logout-modal';
+  m.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#1a2030;border:1px solid #2a3d5e;border-radius:16px;padding:32px 28px;text-align:center;min-width:260px';
+  var p = document.createElement('p');
+  p.style.cssText = 'color:#e8edf5;font-size:16px;margin:0 0 24px';
+  p.textContent = 'Sair do sistema?';
+  var row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:12px;justify-content:center';
+  var btnCancel = document.createElement('button');
+  btnCancel.style.cssText = 'padding:10px 24px;border-radius:8px;border:1px solid #2a3d5e;background:transparent;color:#e8edf5;font-size:14px;cursor:pointer';
+  btnCancel.textContent = 'Cancelar';
+  btnCancel.onclick = function(){ document.getElementById('g-logout-modal').remove(); };
+  var btnSair = document.createElement('button');
+  btnSair.style.cssText = 'padding:10px 24px;border-radius:8px;border:none;background:#F26522;color:#fff;font-size:14px;cursor:pointer';
+  btnSair.textContent = 'Sair';
+  btnSair.onclick = doLogoutGestor;
+  row.appendChild(btnCancel);
+  row.appendChild(btnSair);
+  box.appendChild(p);
+  box.appendChild(row);
+  m.appendChild(box);
+  document.body.appendChild(m);
+}
+function doLogoutGestor() {
   sessionStorage.removeItem('frota_user');
-  currentGestorUser = null;
-  gPinBuffer = ''; gSelectedUserId = null;
-  backToUsers();
-  document.getElementById('pin-login-screen').style.display = 'flex';
-  document.getElementById('header-user-badge').textContent = '';
+  location.reload();
 }
 
 function clearLog() {
